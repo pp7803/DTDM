@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docker và Containerization - MiniCloud Blog</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .meta {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-top: 10px;
+      }
+      .nav {
+        background: #f8f9fa;
+        padding: 15px 40px;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .nav a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        margin-right: 20px;
+        transition: color 0.3s;
+      }
+      .nav a:hover {
+        color: #764ba2;
+      }
+      .content {
+        padding: 40px;
+      }
+      .featured-image {
+        width: 100%;
+        height: 400px;
+        background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+        border-radius: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 80px;
+        border: 3px solid #667eea;
+      }
+      h2 {
+        color: #667eea;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-size: 1.8em;
+      }
+      p {
+        margin-bottom: 20px;
+        text-align: justify;
+        font-size: 1.1em;
+      }
+      .highlight {
+        background: #fff3cd;
+        padding: 20px;
+        border-left: 4px solid #ffc107;
+        margin: 20px 0;
+        border-radius: 5px;
+      }
+      .code-block {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        margin: 20px 0;
+        font-family: "Courier New", monospace;
+        overflow-x: auto;
+      }
+      .tags {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #dee2e6;
+      }
+      .tag {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px 40px;
+        text-align: center;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🐳 Docker và Containerization trong Thời Đại Cloud</h1>
+        <div class="meta">
+          📅 Ngày đăng: 5 Tháng 11, 2025 | 👤 Tác giả: 52000054 - Phát Huỳnh |
+          📚 Chủ đề: DevOps
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="/">🏠 Trang chủ</a>
+        <a href="/blog/">📝 Blog</a>
+        <a href="#comments">💬 Bình luận</a>
+      </div>
+
+      <div class="content">
+        <div class="featured-image">🐳</div>
+
+        <h2>📖 Giới Thiệu</h2>
+        <p>
+          Docker đã cách mạng hóa cách chúng ta phát triển, triển khai và vận
+          hành ứng dụng. Với khả năng đóng gói ứng dụng cùng với tất cả các
+          dependencies vào một container nhẹ, Docker giúp giải quyết bài toán
+          "It works on my machine" mà developers gặp phải hàng ngày.
+        </p>
+
+        <div class="highlight">
+          <strong>💡 Tại sao Docker quan trọng?</strong><br />
+          Docker cho phép chạy ứng dụng một cách nhất quán trên mọi môi trường -
+          từ laptop của developer đến production server, từ on-premise đến
+          cloud. Điều này tiết kiệm thời gian và giảm thiểu lỗi.
+        </div>
+
+        <h2>🎯 Lợi Ích Của Containerization</h2>
+        <p>
+          <strong>1. Tính nhất quán (Consistency):</strong> Container chạy giống
+          nhau trên mọi môi trường, loại bỏ vấn đề "works on my machine but not
+          in production".
+        </p>
+        <p>
+          <strong>2. Hiệu suất (Performance):</strong> Containers chia sẻ kernel
+          của hệ điều hành host, khởi động nhanh hơn và sử dụng ít tài nguyên
+          hơn so với virtual machines.
+        </p>
+        <p>
+          <strong>3. Khả năng mở rộng (Scalability):</strong> Dễ dàng scale ứng
+          dụng bằng cách tạo nhiều container instances, kết hợp với
+          orchestration tools như Kubernetes.
+        </p>
+
+        <h2>🛠️ Docker Trong Thực Tế</h2>
+        <p>
+          Trong dự án MiniCloud này, chúng ta sử dụng Docker để triển khai một
+          hệ thống cloud hoàn chỉnh với 10 services khác nhau. Mỗi service chạy
+          trong container riêng, giao tiếp với nhau qua Docker network.
+        </p>
+
+        <div class="code-block">
+          # Ví dụ: Build và chạy container<br />
+          docker build -t minicloud/web .<br />
+          docker run -d --name web --network cloud-net minicloud/web<br />
+          <br />
+          # Hoặc sử dụng Docker Compose<br />
+          docker compose up -d
+        </div>
+
+        <h2>🚀 Best Practices</h2>
+        <p>
+          <strong>• Multi-stage builds:</strong> Giảm kích thước image bằng cách
+          sử dụng multi-stage builds, chỉ copy những gì cần thiết vào production
+          image.
+        </p>
+        <p>
+          <strong>• .dockerignore:</strong> Sử dụng .dockerignore để loại bỏ các
+          file không cần thiết, giúp quá trình build nhanh hơn.
+        </p>
+        <p>
+          <strong>• Security scanning:</strong> Thường xuyên scan images để phát
+          hiện vulnerabilities bằng công cụ như Trivy hoặc Snyk.
+        </p>
+
+        <h2>📊 Kết Luận</h2>
+        <p>
+          Docker và containerization đã trở thành standard trong modern software
+          development. Việc nắm vững Docker không chỉ giúp bạn phát triển ứng
+          dụng hiệu quả hơn mà còn mở ra cơ hội nghề nghiệp trong lĩnh vực
+          DevOps, Cloud Engineering, và Site Reliability Engineering.
+        </p>
+
+        <div class="highlight">
+          <strong>🎓 Trong dự án MiniCloud:</strong><br />
+          Chúng ta áp dụng Docker để xây dựng 10 services hoàn chỉnh: Web, API,
+          Database, Authentication, Storage, DNS, và Monitoring stack - tất cả
+          chạy trong containers và orchestrated bởi Docker Compose.
+        </div>
+
+        <div class="tags">
+          <span class="tag">Docker</span>
+          <span class="tag">Containerization</span>
+          <span class="tag">DevOps</span>
+          <span class="tag">Cloud</span>
+          <span class="tag">MiniCloud</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © 2025 MiniCloud Blog - DTDM Project |
+          <a href="/blog/" style="color: #667eea">Quay lại Blog</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

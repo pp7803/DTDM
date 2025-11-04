@@ -381,7 +381,117 @@ docker run --rm --network cloud-net \
 
 ---
 
-## 📚 Tài Liệu Tham Khảo
+## � Mở Rộng Hệ Thống (5 Điểm)
+
+### 1️⃣ Web Frontend Server - Blog Cá Nhân
+
+**Mục tiêu:** Hiểu cách triển khai website tĩnh, quản lý nội dung, và cấu trúc thư mục web.
+
+#### 📝 Nội Dung Mở Rộng
+
+Đã tạo **blog cá nhân** với 3 bài viết chuyên nghiệp về công nghệ:
+
+1. **🐳 Docker và Containerization** (`blog1.html`)
+
+   - Giới thiệu về Docker và containerization
+   - Lợi ích và best practices
+   - Ứng dụng trong MiniCloud project
+
+2. **🏗️ Kiến Trúc Microservices** (`blog2.html`)
+
+   - Định nghĩa và đặc điểm microservices
+   - Ưu điểm và thách thức
+   - Kiến trúc MiniCloud với 10 services
+
+3. **📊 Monitoring & Observability** (`blog3.html`)
+   - Three pillars of observability
+   - Prometheus + Grafana monitoring stack
+   - Alerting best practices và SRE principles
+
+#### ✨ Tính Năng
+
+- ✅ Responsive design với gradient backgrounds
+- ✅ Navigation links giữa các trang
+- ✅ Featured icons và color themes riêng cho mỗi bài
+- ✅ Tags và metadata (tác giả, ngày đăng, thời gian đọc)
+- ✅ Highlight boxes cho nội dung quan trọng
+- ✅ Code examples và architecture diagrams
+- ✅ Footer với links quay lại
+
+#### 🎨 Cấu Trúc Files
+
+```
+web-frontend-server/html/blog/
+├── index.html          # Trang danh sách blog (đã cập nhật)
+├── blog1.html          # Bài viết về Docker (mới)
+├── blog2.html          # Bài viết về Microservices (mới)
+└── blog3.html          # Bài viết về Monitoring (mới)
+```
+
+#### 🧪 Kiểm Thử
+
+**1. Rebuild container với nội dung mới:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+docker compose build web-frontend-server
+docker compose up -d web-frontend-server
+```
+
+**2. Truy cập blog:**
+
+- Trang blog: http://localhost:8080/blog/
+- Bài 1: http://localhost:8080/blog/blog1.html
+- Bài 2: http://localhost:8080/blog/blog2.html
+- Bài 3: http://localhost:8080/blog/blog3.html
+
+**3. Test qua API Gateway:**
+
+```bash
+curl -I http://localhost/blog/
+```
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **Web Hosting:** Hiểu cách Nginx serve static content từ filesystem
+
+✅ **Cấu Trúc Thư Mục:** Tổ chức files HTML trong directory structure
+
+✅ **Nginx Alias:** Cấu hình location blocks để map URLs → filesystem paths
+
+✅ **HTML/CSS:** Thiết kế responsive web pages với modern CSS (flexbox, grid)
+
+✅ **Content Management:** Quản lý và liên kết nhiều pages trong một website
+
+✅ **Docker Volumes:** Hiểu cách mount local files vào container
+
+#### 📸 Screenshots
+
+![Blog Index Page](image/blog-index.png)
+_Trang danh sách blog với 3 bài viết_
+
+![Blog Post - Docker](image/blog-docker.png)
+_Bài viết về Docker và Containerization_
+
+![Blog Post - Microservices](image/blog-microservices.png)
+_Bài viết về Kiến trúc Microservices_
+
+![Blog Post - Monitoring](image/blog-monitoring.png)
+_Bài viết về Monitoring & Observability_
+
+#### 💡 Mở Rộng Thêm (Optional)
+
+- [ ] Add search functionality với JavaScript
+- [ ] Implement commenting system
+- [ ] Add RSS feed cho blog posts
+- [ ] Create admin panel để manage posts
+- [ ] Add analytics tracking (Google Analytics)
+- [ ] Implement dark mode toggle
+- [ ] Add social sharing buttons
+
+---
+
+## �📚 Tài Liệu Tham Khảo
 
 ### Scripts Hữu Ích
 
@@ -425,5 +535,3 @@ docker compose down -v
 - **52000054** - Nguyên Hạnh
 - **52100985** - Duy Phát
 - **52100989** - Văn Phú
-
-**© 2025 MiniCloud Project - DTDM Course**

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Microservices Architecture - MiniCloud Blog</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .meta {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-top: 10px;
+      }
+      .nav {
+        background: #f8f9fa;
+        padding: 15px 40px;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .nav a {
+        color: #f5576c;
+        text-decoration: none;
+        font-weight: 600;
+        margin-right: 20px;
+        transition: color 0.3s;
+      }
+      .nav a:hover {
+        color: #f093fb;
+      }
+      .content {
+        padding: 40px;
+      }
+      .featured-image {
+        width: 100%;
+        height: 400px;
+        background: linear-gradient(135deg, #f093fb20 0%, #f5576c20 100%);
+        border-radius: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 80px;
+        border: 3px solid #f5576c;
+      }
+      h2 {
+        color: #f5576c;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-size: 1.8em;
+      }
+      p {
+        margin-bottom: 20px;
+        text-align: justify;
+        font-size: 1.1em;
+      }
+      .highlight {
+        background: #ffe5e5;
+        padding: 20px;
+        border-left: 4px solid #f5576c;
+        margin: 20px 0;
+        border-radius: 5px;
+      }
+      .architecture-box {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin: 25px 0;
+        border: 2px solid #f5576c;
+      }
+      .service-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .service-item {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+      }
+      .tags {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #dee2e6;
+      }
+      .tag {
+        display: inline-block;
+        background: #f5576c;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px 40px;
+        text-align: center;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏗️ Kiến Trúc Microservices: Xây Dựng Hệ Thống Phân Tán</h1>
+        <div class="meta">
+          📅 Ngày đăng: 5 Tháng 11, 2025 | 👤 Tác giả: 52000054 - Phát Huỳnh |
+          📚 Chủ đề: Architecture
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="/">🏠 Trang chủ</a>
+        <a href="/blog/">📝 Blog</a>
+        <a href="#comments">💬 Bình luận</a>
+      </div>
+
+      <div class="content">
+        <div class="featured-image">🏗️</div>
+
+        <h2>🎯 Microservices Là Gì?</h2>
+        <p>
+          Microservices là một architectural pattern trong đó ứng dụng được chia
+          thành nhiều services nhỏ, độc lập, mỗi service chịu trách nhiệm cho
+          một business capability cụ thể. Mỗi service có thể được develop,
+          deploy, và scale độc lập.
+        </p>
+
+        <div class="highlight">
+          <strong>💡 Monolith vs Microservices:</strong><br />
+          Khác với monolithic architecture nơi toàn bộ ứng dụng chạy trong một
+          process duy nhất, microservices chia nhỏ ứng dụng thành nhiều services
+          độc lập giao tiếp qua network.
+        </div>
+
+        <h2>🔑 Đặc Điểm Chính</h2>
+        <p>
+          <strong>1. Loosely Coupled:</strong> Services có thể thay đổi và
+          deploy độc lập mà không ảnh hưởng đến các services khác. Điều này tăng
+          flexibility và giảm risk khi deploy.
+        </p>
+        <p>
+          <strong>2. Independently Deployable:</strong> Mỗi service có thể được
+          deploy riêng biệt, cho phép continuous deployment và faster time to
+          market.
+        </p>
+        <p>
+          <strong>3. Organized Around Business Capabilities:</strong> Services
+          được tổ chức theo business domains (user management, payment,
+          inventory, etc.) thay vì technical layers.
+        </p>
+
+        <h2>🏗️ Kiến Trúc MiniCloud</h2>
+        <p>
+          Dự án MiniCloud của chúng ta là một ví dụ điển hình về microservices
+          architecture. Hệ thống được chia thành 10 services độc lập:
+        </p>
+
+        <div class="service-list">
+          <div class="service-item">🌐 Web Frontend</div>
+          <div class="service-item">⚙️ App Backend</div>
+          <div class="service-item">🗄️ Database</div>
+          <div class="service-item">🔐 Authentication</div>
+          <div class="service-item">📦 Object Storage</div>
+          <div class="service-item">🌍 DNS Server</div>
+          <div class="service-item">📊 Node Exporter</div>
+          <div class="service-item">📈 Prometheus</div>
+          <div class="service-item">📉 Grafana</div>
+          <div class="service-item">🚪 API Gateway</div>
+        </div>
+
+        <div class="architecture-box">
+          <strong>🔄 Service Communication:</strong><br /><br />
+          • <strong>Synchronous:</strong> REST APIs qua HTTP (API Gateway →
+          Backend Services)<br />
+          • <strong>Service Discovery:</strong> Docker DNS resolution trong
+          cloud-net network<br />
+          • <strong>Load Balancing:</strong> Nginx reverse proxy phân phối
+          traffic<br />
+          • <strong>Authentication:</strong> JWT tokens từ Keycloak cho security
+        </div>
+
+        <h2>✅ Ưu Điểm</h2>
+        <p>
+          <strong>• Scalability:</strong> Scale từng service độc lập dựa trên
+          load. Ví dụ: scale API server mà không cần scale database server.
+        </p>
+        <p>
+          <strong>• Technology Diversity:</strong> Mỗi service có thể dùng công
+          nghệ phù hợp nhất. MiniCloud dùng Node.js cho backend, MariaDB cho
+          database, Go cho exporters.
+        </p>
+        <p>
+          <strong>• Fault Isolation:</strong> Lỗi ở một service không làm sập
+          toàn bộ hệ thống. Services khác vẫn hoạt động bình thường.
+        </p>
+        <p>
+          <strong>• Team Autonomy:</strong> Teams có thể work độc lập trên các
+          services khác nhau, tăng productivity và giảm dependencies.
+        </p>
+
+        <h2>⚠️ Thách Thức</h2>
+        <p>
+          <strong>• Complexity:</strong> Distributed system phức tạp hơn
+          monolith, cần tools cho monitoring, logging, và tracing.
+        </p>
+        <p>
+          <strong>• Network Latency:</strong> Inter-service calls qua network
+          chậm hơn in-process calls. Cần optimize và cache khi cần.
+        </p>
+        <p>
+          <strong>• Data Consistency:</strong> Distributed transactions khó
+          implement. Cần dùng patterns như Saga hoặc Event Sourcing.
+        </p>
+
+        <h2>🚀 Best Practices</h2>
+        <div class="architecture-box">
+          <strong>1. API Gateway Pattern:</strong> Sử dụng gateway để route
+          requests và handle cross-cutting concerns như authentication, rate
+          limiting.<br /><br />
+          <strong>2. Service Mesh:</strong> Consider Istio hoặc Linkerd cho
+          advanced traffic management và security.<br /><br />
+          <strong>3. Observability:</strong> Implement comprehensive monitoring
+          với metrics (Prometheus), logs (ELK), và tracing (Jaeger).<br /><br />
+          <strong>4. CI/CD:</strong> Automate build, test, và deployment cho
+          từng service riêng biệt.
+        </div>
+
+        <h2>📊 Kết Luận</h2>
+        <p>
+          Microservices architecture mang lại nhiều lợi ích cho large-scale
+          applications nhưng cũng đi kèm với complexity. Việc hiểu rõ trade-offs
+          và apply đúng patterns sẽ giúp build được hệ thống scalable,
+          maintainable, và resilient.
+        </p>
+
+        <div class="highlight">
+          <strong>🎓 Học từ MiniCloud:</strong><br />
+          Dự án này demonstrate các microservices patterns cơ bản: service
+          separation, API gateway, service discovery, centralized
+          authentication, và monitoring - foundation cho real-world systems.
+        </div>
+
+        <div class="tags">
+          <span class="tag">Microservices</span>
+          <span class="tag">Architecture</span>
+          <span class="tag">Distributed Systems</span>
+          <span class="tag">Cloud Native</span>
+          <span class="tag">MiniCloud</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © 2025 MiniCloud Blog - DTDM Project |
+          <a href="/blog/" style="color: #f5576c">Quay lại Blog</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

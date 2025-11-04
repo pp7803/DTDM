@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitoring & Observability - MiniCloud Blog</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .meta {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-top: 10px;
+      }
+      .nav {
+        background: #f8f9fa;
+        padding: 15px 40px;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .nav a {
+        color: #4facfe;
+        text-decoration: none;
+        font-weight: 600;
+        margin-right: 20px;
+        transition: color 0.3s;
+      }
+      .nav a:hover {
+        color: #00f2fe;
+      }
+      .content {
+        padding: 40px;
+      }
+      .featured-image {
+        width: 100%;
+        height: 400px;
+        background: linear-gradient(135deg, #4facfe20 0%, #00f2fe20 100%);
+        border-radius: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 80px;
+        border: 3px solid #4facfe;
+      }
+      h2 {
+        color: #4facfe;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-size: 1.8em;
+      }
+      p {
+        margin-bottom: 20px;
+        text-align: justify;
+        font-size: 1.1em;
+      }
+      .highlight {
+        background: #e7f5ff;
+        padding: 20px;
+        border-left: 4px solid #4facfe;
+        margin: 20px 0;
+        border-radius: 5px;
+      }
+      .monitoring-stack {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin: 25px 0;
+        border: 2px solid #4facfe;
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .metric-card {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .metric-card .icon {
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+      .metric-card .title {
+        font-weight: bold;
+        font-size: 1.1em;
+      }
+      .code-example {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #4facfe;
+        margin: 20px 0;
+        font-family: "Courier New", monospace;
+        overflow-x: auto;
+      }
+      .tags {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #dee2e6;
+      }
+      .tag {
+        display: inline-block;
+        background: #4facfe;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+      .footer {
+        background: #f8f9fa;
+        padding: 30px 40px;
+        text-align: center;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📊 Monitoring & Observability: Giám Sát Hệ Thống</h1>
+        <div class="meta">
+          📅 Ngày đăng: 5 Tháng 11, 2025 | 👤 Tác giả: 52000054 - Phát Huỳnh |
+          📚 Chủ đề: DevOps & SRE
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="/">🏠 Trang chủ</a>
+        <a href="/blog/">📝 Blog</a>
+        <a href="#comments">💬 Bình luận</a>
+      </div>
+
+      <div class="content">
+        <div class="featured-image">📊</div>
+
+        <h2>🔍 Tại Sao Cần Monitoring?</h2>
+        <p>
+          Trong production environment, việc biết hệ thống đang hoạt động như
+          thế nào là cực kỳ quan trọng. Monitoring và observability giúp detect
+          issues trước khi chúng impact users, optimize performance, và
+          understand system behavior.
+        </p>
+
+        <div class="highlight">
+          <strong>💡 Monitoring vs Observability:</strong><br />
+          <strong>Monitoring:</strong> Collect metrics và alerts khi có vấn đề
+          (known unknowns).<br />
+          <strong>Observability:</strong> Khả năng hiểu internal state từ
+          external outputs (unknown unknowns).
+        </div>
+
+        <h2>📈 The Three Pillars of Observability</h2>
+        <p>
+          <strong>1. Metrics (Số liệu):</strong> Time-series data như CPU usage,
+          memory, request rate, error rate. MiniCloud sử dụng Prometheus để
+          collect và store metrics.
+        </p>
+        <p>
+          <strong>2. Logs (Nhật ký):</strong> Structured hoặc unstructured
+          records của events. Mỗi container trong MiniCloud có logs riêng
+          accessible qua Docker logs.
+        </p>
+        <p>
+          <strong>3. Traces (Theo dõi):</strong> Request flow qua distributed
+          system. Giúp identify bottlenecks và debug performance issues trong
+          microservices.
+        </p>
+
+        <h2>🔧 MiniCloud Monitoring Stack</h2>
+        <div class="monitoring-stack">
+          <strong>📊 Prometheus:</strong> Time-series database thu thập metrics
+          từ targets (Node Exporter, application exporters). Supports powerful
+          query language (PromQL).<br /><br />
+
+          <strong>📉 Grafana:</strong> Visualization platform tạo dashboards từ
+          Prometheus data. Hỗ trợ alerts, annotations, và nhiều data sources.<br /><br />
+
+          <strong>📈 Node Exporter:</strong> Export hardware và OS metrics (CPU,
+          memory, disk, network) từ Linux systems để Prometheus scrape.
+        </div>
+
+        <h2>📊 Metrics Quan Trọng</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="icon">💻</div>
+            <div class="title">CPU Usage</div>
+            <div>System load và utilization</div>
+          </div>
+          <div class="metric-card">
+            <div class="icon">🧠</div>
+            <div class="title">Memory</div>
+            <div>RAM usage và swap</div>
+          </div>
+          <div class="metric-card">
+            <div class="icon">💾</div>
+            <div class="title">Disk I/O</div>
+            <div>Read/write operations</div>
+          </div>
+          <div class="metric-card">
+            <div class="icon">🌐</div>
+            <div class="title">Network</div>
+            <div>Bandwidth và packets</div>
+          </div>
+        </div>
+
+        <h2>🎯 Key Metrics trong MiniCloud</h2>
+
+        <div class="code-example">
+          # CPU metrics<br />
+          node_cpu_seconds_total<br />
+          <br />
+          # Memory metrics<br />
+          node_memory_MemAvailable_bytes<br />
+          node_memory_MemTotal_bytes<br />
+          <br />
+          # Disk metrics<br />
+          node_disk_read_bytes_total<br />
+          node_disk_written_bytes_total<br />
+          <br />
+          # Network metrics<br />
+          node_network_receive_bytes_total<br />
+          node_network_transmit_bytes_total
+        </div>
+
+        <h2>🚨 Alerting Best Practices</h2>
+        <p>
+          <strong>• Alert on Symptoms, Not Causes:</strong> Alert khi users bị
+          impact (high latency, errors) thay vì infrastructure metrics (disk 80%
+          full).
+        </p>
+        <p>
+          <strong>• Reduce Alert Fatigue:</strong> Chỉ alert cho issues cần
+          immediate action. Quá nhiều alerts → ignored alerts → missed
+          incidents.
+        </p>
+        <p>
+          <strong>• Actionable Alerts:</strong> Mỗi alert phải có clear action
+          steps trong runbook. "CPU high" không đủ - "CPU > 90% for 5m, check
+          process X".
+        </p>
+
+        <h2>📉 Dashboard Design</h2>
+        <div class="monitoring-stack">
+          <strong>Golden Signals (Google SRE):</strong><br /><br />
+          • <strong>Latency:</strong> Time để process request<br />
+          • <strong>Traffic:</strong> Request rate (RPS)<br />
+          • <strong>Errors:</strong> Request failure rate (%)<br />
+          • <strong>Saturation:</strong> Resource utilization (CPU, memory,
+          disk)
+        </div>
+
+        <h2>🔍 Observability trong Microservices</h2>
+        <p>
+          Với distributed systems như MiniCloud, observability trở nên phức tạp
+          hơn. Request đi qua nhiều services (API Gateway → Backend → Database),
+          cần correlation IDs để trace request flow.
+        </p>
+
+        <div class="highlight">
+          <strong>🎓 Trong MiniCloud:</strong><br />
+          Prometheus scrapes metrics từ Node Exporter mỗi 15s, store trong
+          time-series database. Grafana query Prometheus và visualize metrics
+          trong dashboard với auto-refresh. Bạn có thể thấy real-time CPU,
+          memory, network, và disk metrics của container hosts.
+        </div>
+
+        <h2>🚀 Advanced Topics</h2>
+        <p>
+          <strong>• Distributed Tracing:</strong> Tools như Jaeger hoặc Zipkin
+          để trace requests across microservices. Identify slow services và
+          bottlenecks.
+        </p>
+        <p>
+          <strong>• Log Aggregation:</strong> ELK Stack (Elasticsearch,
+          Logstash, Kibana) hoặc Loki để centralize và search logs từ all
+          services.
+        </p>
+        <p>
+          <strong>• Anomaly Detection:</strong> Machine learning để detect
+          unusual patterns tự động thay vì manual threshold-based alerts.
+        </p>
+
+        <h2>📊 Kết Luận</h2>
+        <p>
+          Monitoring và observability không phải "nice to have" mà là essential
+          cho production systems. Việc invest vào monitoring stack ngay từ đầu
+          sẽ save rất nhiều time khi troubleshooting issues và help maintain
+          high availability.
+        </p>
+
+        <div class="monitoring-stack">
+          <strong>💡 Takeaways:</strong><br /><br />
+          ✅ Implement monitoring từ day 1<br />
+          ✅ Monitor symptoms, không chỉ metrics<br />
+          ✅ Build actionable dashboards và alerts<br />
+          ✅ Practice SRE principles: SLIs, SLOs, error budgets<br />
+          ✅ Continuously improve observability stack
+        </div>
+
+        <div class="tags">
+          <span class="tag">Monitoring</span>
+          <span class="tag">Observability</span>
+          <span class="tag">Prometheus</span>
+          <span class="tag">Grafana</span>
+          <span class="tag">SRE</span>
+          <span class="tag">MiniCloud</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © 2025 MiniCloud Blog - DTDM Project |
+          <a href="/blog/" style="color: #4facfe">Quay lại Blog</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

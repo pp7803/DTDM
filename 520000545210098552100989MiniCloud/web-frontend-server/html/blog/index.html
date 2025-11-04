@@ -1,2 +1,255 @@
-<h1>MyMiniCloud - Blog</h1>
-<a href="/">Back</a>
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiniCloud Blog - Chia Sẻ Kiến Thức Công Nghệ</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 50px;
+      }
+      .header h1 {
+        font-size: 3em;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .header p {
+        font-size: 1.3em;
+        opacity: 0.95;
+      }
+      .nav {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .nav a {
+        display: inline-block;
+        background: white;
+        color: #667eea;
+        padding: 12px 30px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      .nav a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+      .blog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+      }
+      .blog-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      .blog-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
+      .blog-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 60px;
+        text-align: center;
+        font-size: 80px;
+      }
+      .blog-card:nth-child(2) .blog-icon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+      .blog-card:nth-child(3) .blog-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+      .blog-content {
+        padding: 30px;
+      }
+      .blog-content h2 {
+        color: #333;
+        font-size: 1.6em;
+        margin-bottom: 15px;
+      }
+      .blog-meta {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+      .blog-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .blog-content p {
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 20px;
+      }
+      .blog-tags {
+        margin-bottom: 20px;
+      }
+      .tag {
+        display: inline-block;
+        background: #f0f0f0;
+        color: #667eea;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+      .read-more {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      .blog-card:nth-child(2) .read-more {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+      .blog-card:nth-child(3) .read-more {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+      .read-more:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      .footer {
+        text-align: center;
+        color: white;
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .footer p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📚 MiniCloud Blog</h1>
+        <p>Chia sẻ kiến thức về Cloud, DevOps, và Distributed Systems</p>
+      </div>
+
+      <div class="nav">
+        <a href="/">🏠 Quay lại Trang chủ</a>
+      </div>
+
+      <div class="blog-grid">
+        <!-- Blog Post 1 -->
+        <div class="blog-card">
+          <div class="blog-icon">🐳</div>
+          <div class="blog-content">
+            <h2>Docker và Containerization trong Thời Đại Cloud</h2>
+            <div class="blog-meta">
+              <span>📅 5 Tháng 11, 2025</span>
+              <span>👤 Phát Huỳnh</span>
+              <span>⏱️ 8 phút đọc</span>
+            </div>
+            <p>
+              Khám phá cách Docker đã cách mạng hóa việc phát triển và triển
+              khai ứng dụng. Tìm hiểu về containerization, lợi ích của Docker,
+              và best practices khi làm việc với containers trong production
+              environment.
+            </p>
+            <div class="blog-tags">
+              <span class="tag">Docker</span>
+              <span class="tag">Containerization</span>
+              <span class="tag">DevOps</span>
+              <span class="tag">Cloud</span>
+            </div>
+            <a href="blog1.html" class="read-more">Đọc thêm →</a>
+          </div>
+        </div>
+
+        <!-- Blog Post 2 -->
+        <div class="blog-card">
+          <div class="blog-icon">🏗️</div>
+          <div class="blog-content">
+            <h2>Kiến Trúc Microservices: Xây Dựng Hệ Thống Phân Tán</h2>
+            <div class="blog-meta">
+              <span>📅 5 Tháng 11, 2025</span>
+              <span>👤 Phát Huỳnh</span>
+              <span>⏱️ 10 phút đọc</span>
+            </div>
+            <p>
+              Deep dive vào microservices architecture - từ định nghĩa, ưu điểm,
+              thách thức đến best practices. Học cách thiết kế và implement hệ
+              thống phân tán hiệu quả với ví dụ thực tế từ dự án MiniCloud.
+            </p>
+            <div class="blog-tags">
+              <span class="tag">Microservices</span>
+              <span class="tag">Architecture</span>
+              <span class="tag">Distributed Systems</span>
+              <span class="tag">Cloud Native</span>
+            </div>
+            <a href="blog2.html" class="read-more">Đọc thêm →</a>
+          </div>
+        </div>
+
+        <!-- Blog Post 3 -->
+        <div class="blog-card">
+          <div class="blog-icon">📊</div>
+          <div class="blog-content">
+            <h2>Monitoring & Observability: Giám Sát Hệ Thống</h2>
+            <div class="blog-meta">
+              <span>📅 5 Tháng 11, 2025</span>
+              <span>👤 Phát Huỳnh</span>
+              <span>⏱️ 9 phút đọc</span>
+            </div>
+            <p>
+              Tìm hiểu về monitoring và observability - hai yếu tố quan trọng
+              cho production systems. Khám phá Prometheus, Grafana, và các best
+              practices để build monitoring stack hiệu quả theo nguyên tắc SRE.
+            </p>
+            <div class="blog-tags">
+              <span class="tag">Monitoring</span>
+              <span class="tag">Observability</span>
+              <span class="tag">Prometheus</span>
+              <span class="tag">Grafana</span>
+              <span class="tag">SRE</span>
+            </div>
+            <a href="blog3.html" class="read-more">Đọc thêm →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>© 2025 MiniCloud Blog - DTDM Project</p>
+        <p style="margin-top: 10px; font-size: 0.9em">
+          Được phát triển bởi <strong>52000054 - Phát Huỳnh</strong>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
