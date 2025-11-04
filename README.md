@@ -650,24 +650,244 @@ location /api/ {
 }
 ```
 
-**URL Mapping:**
-
-- `http://localhost/api/student` → `http://application-backend-server:8081/student`
-- `http://localhost/api/hello` → `http://application-backend-server:8081/hello`
-
-#### 💡 Mở Rộng Thêm (Optional)
-
-- [ ] Thêm endpoint POST /student để tạo sinh viên mới
-- [ ] Implement endpoint GET /student/:id để lấy chi tiết 1 sinh viên
-- [ ] Add pagination và sorting cho danh sách
-- [ ] Connect với MariaDB thay vì JSON file
-- [ ] Implement authentication cho protected endpoints
-- [ ] Add input validation với libraries như Joi
-- [ ] Create Swagger/OpenAPI documentation
-
 ---
 
-## ��📚 Tài Liệu Tham Khảo
+### 3️⃣ Relational Database Server - Student Database & CRUD
+
+**Mục tiêu:** Hiểu về lưu trữ quan hệ (RDBMS), thiết kế schema, và thực hiện CRUD operations.
+
+#### 📝 Nội Dung Mở Rộng
+
+Đã tạo **cơ sở dữ liệu studentdb** với bảng `students` đầy đủ thông tin sinh viên.
+
+#### 🗄️ Database Schema
+
+**Database:** `studentdb`  
+**Table:** `students`
+
+```sql
+CREATE TABLE students (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id VARCHAR(10) UNIQUE NOT NULL,
+    fullname VARCHAR(100) NOT NULL,
+    dob DATE NOT NULL,
+    major VARCHAR(50) NOT NULL,
+    gpa DECIMAL(3,2) DEFAULT 0.00,
+    email VARCHAR(100),
+    phone VARCHAR(15),
+    address VARCHAR(200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_id (student_id),
+    INDEX idx_major (major)
+);
+```
+
+#### 📊 Sample Data (5 sinh viên)
+
+| ID  | Student ID | Fullname    | Major              | GPA  | Email                          |
+| --- | ---------- | ----------- | ------------------ | ---- | ------------------------------ |
+| 1   | 52000054   | Nguyên Hạnh | Khoa học Máy tính  | 3.75 | nguyenhanh@student.tdtu.edu.vn |
+| 2   | 52100985   | Duy Phát    | Mạng Máy tính      | 3.82 | duyphat@student.tdtu.edu.vn    |
+| 3   | 52100989   | Văn Phú     | Hệ thống Thông tin | 3.68 | vanphu@student.tdtu.edu.vn     |
+| 4   | 52100123   | Minh Tuấn   | Kỹ thuật Phần mềm  | 3.90 | minhtuan@student.tdtu.edu.vn   |
+| 5   | 52000456   | Thu Hà      | An toàn Thông tin  | 3.55 | thuha@student.tdtu.edu.vn      |
+
+#### 🔧 CRUD Operations
+
+**1. CREATE - Thêm sinh viên mới:**
+
+```sql
+INSERT INTO students (student_id, fullname, dob, major, gpa, email, phone, address)
+VALUES ('52100999', 'Anh Khoa', '2002-09-15', 'Trí tuệ Nhân tạo', 3.65,
+        'anhkhoa@student.tdtu.edu.vn', '0907890123', 'TP. Hồ Chí Minh');
+```
+
+**2. READ - Đọc dữ liệu:**
+
+```sql
+-- Lấy tất cả sinh viên
+SELECT * FROM students;
+
+-- Lấy sinh viên theo ID
+SELECT * FROM students WHERE student_id = '52000054';
+
+-- Lấy sinh viên theo major
+SELECT * FROM students WHERE major = 'Khoa học Máy tính';
+
+-- Lấy sinh viên có GPA > 3.7
+SELECT * FROM students WHERE gpa > 3.7 ORDER BY gpa DESC;
+
+-- Thống kê theo major
+SELECT major, COUNT(*) as total, AVG(gpa) as avg_gpa
+FROM students GROUP BY major;
+```
+
+**3. UPDATE - Cập nhật dữ liệu:**
+
+```sql
+-- Cập nhật GPA
+UPDATE students SET gpa = 3.85 WHERE student_id = '52000054';
+
+-- Cập nhật nhiều fields
+UPDATE students
+SET email = 'newemail@student.tdtu.edu.vn', phone = '0901111111'
+WHERE student_id = '52100985';
+
+-- Cập nhật major
+UPDATE students SET major = 'Data Science' WHERE id = 4;
+```
+
+**4. DELETE - Xóa dữ liệu:**
+
+```sql
+-- Xóa theo student_id
+DELETE FROM students WHERE student_id = '52100999';
+
+-- Xóa sinh viên có GPA thấp (cẩn thận!)
+DELETE FROM students WHERE gpa < 2.0;
+
+-- Xóa tất cả (KHÔNG khuyến khích!)
+-- DELETE FROM students;
+```
+
+#### 🧪 Kiểm Thử
+
+**1. Database đã được tạo tự động khi start container:**
+
+```bash
+# File init được mount: relational-database-server/init/002_studentdb.sql
+docker compose logs relational-database-server | grep studentdb
+```
+
+**2. Connect và test CRUD:**
+
+```bash
+# SELECT - Xem tất cả sinh viên
+docker run -it --rm --network cloud-net -e MYSQL_PWD=root mysql:8 \
+  sh -lc 'mysql -h relational-database-server -uroot -e "USE studentdb; SELECT * FROM students;"'
+
+# INSERT - Thêm sinh viên mới
+docker run -it --rm --network cloud-net -e MYSQL_PWD=root mysql:8 \
+  sh -lc 'mysql -h relational-database-server -uroot -e "USE studentdb;
+  INSERT INTO students (student_id, fullname, dob, major, gpa)
+  VALUES (\"52100999\", \"Test Student\", \"2002-01-01\", \"Testing\", 3.50);"'
+
+# UPDATE - Cập nhật GPA
+docker run -it --rm --network cloud-net -e MYSQL_PWD=root mysql:8 \
+  sh -lc 'mysql -h relational-database-server -uroot -e "USE studentdb;
+  UPDATE students SET gpa = 3.95 WHERE student_id = \"52000054\";"'
+
+# DELETE - Xóa sinh viên test
+docker run -it --rm --network cloud-net -e MYSQL_PWD=root mysql:8 \
+  sh -lc 'mysql -h relational-database-server -uroot -e "USE studentdb;
+  DELETE FROM students WHERE student_id = \"52100999\";"'
+```
+
+**3. Interactive shell (MySQL CLI):**
+
+```bash
+# Connect vào MySQL shell
+docker run -it --rm --network cloud-net -e MYSQL_PWD=root mysql:8 \
+  mysql -h relational-database-server -uroot
+
+# Trong shell:
+USE studentdb;
+SHOW TABLES;
+DESCRIBE students;
+SELECT * FROM students;
+```
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **Database Design:** Thiết kế schema với primary key, indexes, constraints
+
+✅ **Data Types:** Hiểu các kiểu dữ liệu (INT, VARCHAR, DATE, DECIMAL, TIMESTAMP)
+
+✅ **CRUD Operations:** Thực hành INSERT, SELECT, UPDATE, DELETE
+
+✅ **SQL Queries:** Viết queries với WHERE, ORDER BY, GROUP BY, JOIN
+
+✅ **Database Normalization:** Tổ chức dữ liệu theo chuẩn (1NF, 2NF, 3NF)
+
+✅ **Docker Volumes:** Hiểu cách persist database data qua volumes
+
+✅ **Init Scripts:** Tự động khởi tạo database khi container start
+
+✅ **Connection String:** Connect từ application tới database server
+
+#### 📸 Screenshots
+
+![CRUD Select](image/30.png)
+_Query SELECT lấy danh sách sinh viên_
+
+![CRUD Insert](image/31.png)
+_INSERT thêm sinh viên mới_
+
+![CRUD Update](image/32.png)
+_UPDATE cập nhật GPA sinh viên_
+
+#### 🔗 Connect từ Backend
+
+**Cài đặt MySQL driver cho Node.js:**
+
+```bash
+npm install mysql2
+```
+
+**Thêm vào `server.js`:**
+
+```javascript
+import mysql from "mysql2/promise";
+
+// Create connection pool
+const pool = mysql.createPool({
+  host: "relational-database-server",
+  user: "root",
+  password: "root",
+  database: "studentdb",
+  waitForConnections: true,
+  connectionLimit: 10,
+});
+
+// API endpoint to get students from DB
+app.get("/students/db", async (_req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM students ORDER BY gpa DESC");
+    res.json({
+      success: true,
+      source: "database",
+      count: rows.length,
+      data: rows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+```
+
+#### 💾 Data Persistence
+
+Database data được lưu trong Docker volume, không bị mất khi restart container:
+
+```bash
+# Xem volumes
+docker volume ls | grep database
+
+# Inspect volume
+docker volume inspect [volume-name]
+
+# Backup database
+docker compose exec relational-database-server \
+  mysqldump -uroot -proot studentdb > backup.sql
+
+# Restore database
+docker compose exec -T relational-database-server \
+  mysql -uroot -proot studentdb < backup.sql
+```
 
 ### Scripts Hữu Ích
 
