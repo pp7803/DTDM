@@ -2,7 +2,7 @@
 
 > **Dự án**: Thiết kế và triển khai hệ thống cloud hoàn chỉnh với Docker  
 > **Sinh viên**: 52000054 - 52100098 - 52100989  
-> **Môn học**: Distributed & Decentralized Management (DTDM)
+> **Môn học**: Điện toán đám mây (DTDM)
 
 ---
 
