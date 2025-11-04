@@ -1012,7 +1012,7 @@ _Tạo user sv02_
 - **Web origins:** `*`
 - Click **Save**
 
-![Create Client](image/keycloak-client.png)
+![Create Client](image/37.png)
 _Tạo client nodejs-app với Access Type: public_
 
 **Kết quả:** Client `nodejs-app` được tạo và có thể nhận tokens.
