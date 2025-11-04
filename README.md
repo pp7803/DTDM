@@ -925,20 +925,20 @@ _Đăng nhập Keycloak Admin Console_
 
 **3. Điền thông tin:**
 
-- **Realm name:** `realm_52000054` (theo mã sinh viên)
+- **Realm name:** `realm_520000545210098552100989` (theo mã sinh viên)
 - **Enabled:** ON
 - Click **Create**
 
 ![Create Realm](image/34.png)
 _Tạo Realm mới theo mã sinh viên_
 
-**Kết quả:** Realm `realm_52000054` được tạo và active.
+**Kết quả:** Realm `realm_520000545210098552100989` được tạo và active.
 
 ---
 
 #### 👥 Bước 2: Tạo Users
 
-**1. Trong Realm `realm_52000054`, click menu "Users" (sidebar trái)**
+**1. Trong Realm `realm_520000545210098552100989`, click menu "Users" (sidebar trái)**
 
 **2. Click "Add user"**
 
@@ -961,6 +961,8 @@ _Tạo Realm mới theo mã sinh viên_
 - Click **Save**
 
 ![Create User sv01](image/35.png)
+
+![Create User sv01](image/36.png)
 _Tạo user sv01 với thông tin đầy đủ_
 
 **User 2: sv02** (làm tương tự)
@@ -972,7 +974,6 @@ _Tạo user sv01 với thông tin đầy đủ_
 - **Password:** `sv02password`
 - **Temporary:** OFF
 
-![Create User sv02](image/keycloak-user2.png)
 _Tạo user sv02_
 
 **Kết quả:** 2 users (sv01, sv02) được tạo và có thể login.
@@ -988,7 +989,7 @@ _Tạo user sv02_
 **3. General Settings:**
 
 - **Client type:** `OpenID Connect`
-- **Client ID:** `flask-app`
+- **Client ID:** `nodejs-app`
 - Click **Next**
 
 **4. Capability config:**
@@ -1012,9 +1013,9 @@ _Tạo user sv02_
 - Click **Save**
 
 ![Create Client](image/keycloak-client.png)
-_Tạo client flask-app với Access Type: public_
+_Tạo client nodejs-app với Access Type: public_
 
-**Kết quả:** Client `flask-app` được tạo và có thể nhận tokens.
+**Kết quả:** Client `nodejs-app` được tạo và có thể nhận tokens.
 
 ---
 
@@ -1022,7 +1023,7 @@ _Tạo client flask-app với Access Type: public_
 
 **1. Lấy Token Endpoint URL:**
 
-Trong client `flask-app`, click tab "Details" hoặc vào:
+Trong client `nodejs-app`, click tab "Details" hoặc vào:
 
 ```
 Realm Settings → General → Endpoints → OpenID Endpoint Configuration
@@ -1031,16 +1032,16 @@ Realm Settings → General → Endpoints → OpenID Endpoint Configuration
 **Token Endpoint:**
 
 ```
-http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token
+http://localhost:8081/realms/realm_520000545210098552100989/protocol/openid-connect/token
 ```
 
 **2. Lấy Access Token (qua curl):**
 
 ```bash
 # Lấy token với user sv01
-curl -X POST http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token \
+curl -X POST http://localhost:8081/realms/realm_520000545210098552100989/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=flask-app" \
+  -d "client_id=nodejs-app" \
   -d "username=sv01" \
   -d "password=sv01password" \
   -d "grant_type=password"
@@ -1114,13 +1115,13 @@ curl -H "Authorization: Bearer $TOKEN" \
 #### 📸 Screenshots
 
 ![Keycloak Realm](image/keycloak-realm.png)
-_Realm realm_52000054 đã được tạo_
+_Realm realm_520000545210098552100989 đã được tạo_
 
 ![Keycloak Users](image/keycloak-users.png)
 _2 users sv01 và sv02 trong realm_
 
 ![Keycloak Client](image/keycloak-client.png)
-_Client flask-app với public access_
+_Client nodejs-app với public access_
 
 ![Token Flow](image/keycloak-token-flow.png)
 _Complete token flow: Login → Get Token → Access Protected Resource_
@@ -1134,8 +1135,8 @@ _Complete token flow: Login → Get Token → Access Protected Resource_
 ```yaml
 application-backend-server:
   environment:
-    OIDC_ISSUER: "http://authentication-identity-server:8080/realms/realm_52000054"
-    OIDC_AUDIENCE: "flask-app"
+    OIDC_ISSUER: "http://authentication-identity-server:8080/realms/realm_520000545210098552100989"
+    OIDC_AUDIENCE: "nodejs-app"
 ```
 
 **Restart backend:**
@@ -1158,9 +1159,9 @@ docker compose up -d authentication-identity-server application-backend-server
 
 ```bash
 TOKEN=$(curl -s -X POST \
-  http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token \
+  http://localhost:8081/realms/realm_520000545210098552100989/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=flask-app" \
+  -d "client_id=nodejs-app" \
   -d "username=sv01" \
   -d "password=sv01password" \
   -d "grant_type=password" | jq -r .access_token)
@@ -1179,9 +1180,9 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost/api/secure
 
 ```bash
 TOKEN_SV02=$(curl -s -X POST \
-  http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token \
+  http://localhost:8081/realms/realm_520000545210098552100989/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=flask-app" \
+  -d "client_id=nodejs-app" \
   -d "username=sv02" \
   -d "password=sv02password" \
   -d "grant_type=password" | jq -r .access_token)
@@ -1209,7 +1210,7 @@ echo $TOKEN | cut -d. -f2 | base64 -d 2>/dev/null | jq
 **3. Check JWKS endpoint:**
 
 ```bash
-curl http://localhost:8081/realms/realm_52000054/protocol/openid-connect/certs
+curl http://localhost:8081/realms/realm_520000545210098552100989/protocol/openid-connect/certs
 ```
 
 **4. Test without token (should fail):**
