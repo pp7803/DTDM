@@ -913,7 +913,7 @@ Password: admin
 ```
 
 ![Keycloak Login](image/11.png)
-*Đăng nhập Keycloak Admin Console*
+_Đăng nhập Keycloak Admin Console_
 
 ---
 
@@ -924,12 +924,13 @@ Password: admin
 **2. Click "Create Realm"**
 
 **3. Điền thông tin:**
+
 - **Realm name:** `realm_52000054` (theo mã sinh viên)
 - **Enabled:** ON
 - Click **Create**
 
-![Create Realm](image/keycloak-realm.png)
-*Tạo Realm mới theo mã sinh viên*
+![Create Realm](image/34.png)
+_Tạo Realm mới theo mã sinh viên_
 
 **Kết quả:** Realm `realm_52000054` được tạo và active.
 
@@ -942,6 +943,7 @@ Password: admin
 **2. Click "Add user"**
 
 **User 1: sv01**
+
 - **Username:** `sv01`
 - **Email:** `sv01@student.tdtu.edu.vn`
 - **First name:** `Sinh viên`
@@ -950,6 +952,7 @@ Password: admin
 - Click **Create**
 
 **Sau khi tạo, set password:**
+
 - Click tab "Credentials"
 - Click "Set password"
 - **Password:** `sv01password`
@@ -957,10 +960,11 @@ Password: admin
 - **Temporary:** OFF (để user không phải đổi password lần đầu)
 - Click **Save**
 
-![Create User sv01](image/keycloak-user1.png)
-*Tạo user sv01 với thông tin đầy đủ*
+![Create User sv01](image/35.png)
+_Tạo user sv01 với thông tin đầy đủ_
 
 **User 2: sv02** (làm tương tự)
+
 - **Username:** `sv02`
 - **Email:** `sv02@student.tdtu.edu.vn`
 - **First name:** `Sinh viên`
@@ -969,7 +973,7 @@ Password: admin
 - **Temporary:** OFF
 
 ![Create User sv02](image/keycloak-user2.png)
-*Tạo user sv02*
+_Tạo user sv02_
 
 **Kết quả:** 2 users (sv01, sv02) được tạo và có thể login.
 
@@ -982,11 +986,13 @@ Password: admin
 **2. Click "Create client"**
 
 **3. General Settings:**
+
 - **Client type:** `OpenID Connect`
 - **Client ID:** `flask-app`
 - Click **Next**
 
 **4. Capability config:**
+
 - **Client authentication:** OFF (public client)
 - **Authorization:** OFF
 - **Authentication flow:**
@@ -996,16 +1002,17 @@ Password: admin
 - Click **Next**
 
 **5. Login settings:**
+
 - **Root URL:** `http://localhost:8085`
 - **Home URL:** `http://localhost:8085`
-- **Valid redirect URIs:** 
+- **Valid redirect URIs:**
   - `http://localhost:8085/*`
   - `http://localhost/api/*`
 - **Web origins:** `*`
 - Click **Save**
 
 ![Create Client](image/keycloak-client.png)
-*Tạo client flask-app với Access Type: public*
+_Tạo client flask-app với Access Type: public_
 
 **Kết quả:** Client `flask-app` được tạo và có thể nhận tokens.
 
@@ -1016,11 +1023,13 @@ Password: admin
 **1. Lấy Token Endpoint URL:**
 
 Trong client `flask-app`, click tab "Details" hoặc vào:
+
 ```
 Realm Settings → General → Endpoints → OpenID Endpoint Configuration
 ```
 
 **Token Endpoint:**
+
 ```
 http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token
 ```
@@ -1038,6 +1047,7 @@ curl -X POST http://localhost:8081/realms/realm_52000054/protocol/openid-connect
 ```
 
 **Response sẽ có:**
+
 ```json
 {
   "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -1049,7 +1059,7 @@ curl -X POST http://localhost:8081/realms/realm_52000054/protocol/openid-connect
 ```
 
 ![Get Token](image/keycloak-token.png)
-*Lấy access token qua Password Grant flow*
+_Lấy access token qua Password Grant flow_
 
 **3. Test /secure endpoint với token:**
 
@@ -1063,6 +1073,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "message": "Secure OK",
@@ -1071,7 +1082,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```
 
 ![Test Secure](image/keycloak-secure.png)
-*Test /secure endpoint với Bearer token thành công*
+_Test /secure endpoint với Bearer token thành công_
 
 **4. Test qua API Gateway:**
 
@@ -1103,16 +1114,16 @@ curl -H "Authorization: Bearer $TOKEN" \
 #### 📸 Screenshots
 
 ![Keycloak Realm](image/keycloak-realm.png)
-*Realm realm_52000054 đã được tạo*
+_Realm realm_52000054 đã được tạo_
 
 ![Keycloak Users](image/keycloak-users.png)
-*2 users sv01 và sv02 trong realm*
+_2 users sv01 và sv02 trong realm_
 
 ![Keycloak Client](image/keycloak-client.png)
-*Client flask-app với public access*
+_Client flask-app với public access_
 
 ![Token Flow](image/keycloak-token-flow.png)
-*Complete token flow: Login → Get Token → Access Protected Resource*
+_Complete token flow: Login → Get Token → Access Protected Resource_
 
 ---
 
@@ -1128,6 +1139,7 @@ application-backend-server:
 ```
 
 **Restart backend:**
+
 ```bash
 docker compose restart application-backend-server
 ```
@@ -1137,11 +1149,13 @@ docker compose restart application-backend-server
 #### 🧪 Complete Test Flow
 
 **1. Start Keycloak và Backend:**
+
 ```bash
 docker compose up -d authentication-identity-server application-backend-server
 ```
 
 **2. Get token:**
+
 ```bash
 TOKEN=$(curl -s -X POST \
   http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token \
@@ -1155,12 +1169,14 @@ echo "Token: $TOKEN"
 ```
 
 **3. Test protected endpoint:**
+
 ```bash
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8085/secure
 curl -H "Authorization: Bearer $TOKEN" http://localhost/api/secure
 ```
 
 **4. Test với user sv02:**
+
 ```bash
 TOKEN_SV02=$(curl -s -X POST \
   http://localhost:8081/realms/realm_52000054/protocol/openid-connect/token \
@@ -1178,28 +1194,33 @@ curl -H "Authorization: Bearer $TOKEN_SV02" http://localhost:8085/secure
 #### 🔍 Debug & Troubleshooting
 
 **1. Check Keycloak logs:**
+
 ```bash
 docker compose logs -f authentication-identity-server
 ```
 
 **2. Verify token (decode JWT):**
+
 ```bash
 # Sử dụng jwt.io hoặc decode locally
 echo $TOKEN | cut -d. -f2 | base64 -d 2>/dev/null | jq
 ```
 
 **3. Check JWKS endpoint:**
+
 ```bash
 curl http://localhost:8081/realms/realm_52000054/protocol/openid-connect/certs
 ```
 
 **4. Test without token (should fail):**
+
 ```bash
 curl http://localhost:8085/secure
 # Response: {"error":"Missing Bearer token"}
 ```
 
 **5. Test with invalid token:**
+
 ```bash
 curl -H "Authorization: Bearer invalid_token" http://localhost:8085/secure
 # Response: 401 Unauthorized
