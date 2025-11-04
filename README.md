@@ -491,7 +491,201 @@ _Bài viết về Monitoring & Observability_
 
 ---
 
-## �📚 Tài Liệu Tham Khảo
+### 2️⃣ Application Backend Server - REST API Students
+
+**Mục tiêu:** Làm quen với microservice, REST API, và HTTP JSON response.
+
+#### 📝 Nội Dung Mở Rộng
+
+Đã bổ sung **API endpoint mới** để quản lý thông tin sinh viên:
+
+**Endpoint:** `GET /student`  
+**Response:** JSON array chứa danh sách 5 sinh viên
+
+![Enhanced REST API](image/25.png)
+
+#### 🎯 Implementation Details
+
+**1. File `students.json` (5 sinh viên):**
+
+```json
+[
+  {
+    "id": "52000054",
+    "name": "Nguyên Hạnh",
+    "major": "Khoa học Máy tính",
+    "gpa": 3.75,
+    "email": "nguyenhanh@student.uit.edu.vn",
+    "year": 3
+  },
+  {
+    "id": "52100985",
+    "name": "Duy Phát",
+    "major": "Công nghệ Thông tin",
+    "gpa": 3.82,
+    "email": "duyphat@student.uit.edu.vn",
+    "year": 3
+  },
+  {
+    "id": "52100989",
+    "name": "Văn Phú",
+    "major": "Hệ thống Thông tin",
+    "gpa": 3.68,
+    "email": "vanphu@student.uit.edu.vn",
+    "year": 3
+  }
+  // ... + 2 sinh viên khác
+]
+```
+
+**2. Route trong `server.js` (Express/Node.js):**
+
+```javascript
+import { readFileSync } from "fs";
+
+app.get("/student", (_req, res) => {
+  try {
+    const data = readFileSync("./students.json", "utf8");
+    const students = JSON.parse(data);
+    res.json({
+      success: true,
+      count: students.length,
+      data: students,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Failed to read student data",
+    });
+  }
+});
+```
+
+**3. Updated `Dockerfile`:**
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json ./
+RUN npm install --omit=dev
+COPY server.js ./
+COPY students.json ./    # ← Thêm dòng này
+EXPOSE 8081
+CMD ["node","server.js"]
+```
+
+#### 🧪 Kiểm Thử
+
+**1. Rebuild container:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+
+# Build image mới
+docker compose build application-backend-server
+
+# Stop và remove container cũ
+docker compose stop application-backend-server
+docker compose rm -f application-backend-server
+
+# Start lại
+docker compose up -d application-backend-server
+
+# Check logs
+docker compose logs -f application-backend-server
+```
+
+**2. Test API endpoint:**
+
+```bash
+# Test trực tiếp (port 8085)
+curl http://localhost:8085/student
+
+# Test qua API Gateway (port 80)
+curl http://localhost/api/student
+
+# Test với pretty JSON
+curl -s http://localhost/api/student | jq
+
+# Test với headers
+curl -i http://localhost/api/student
+```
+
+**3. Expected Response:**
+
+```json
+{
+  "success": true,
+  "count": 5,
+  "data": [
+    {
+      "id": "52000054",
+      "name": "Nguyên Hạnh",
+      "major": "Khoa học Máy tính",
+      "gpa": 3.75,
+      "email": "nguyenhanh@student.uit.edu.vn",
+      "year": 3
+    }
+    // ... 4 sinh viên khác
+  ]
+}
+```
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **REST API Design:** Hiểu cách thiết kế RESTful endpoints (GET, POST, PUT, DELETE)
+
+✅ **HTTP Methods & Status Codes:** Phân biệt các HTTP methods và response codes (200, 404, 500)
+
+✅ **JSON Data Format:** Serialize/deserialize JSON data trong Node.js
+
+✅ **File System Operations:** Đọc file từ filesystem trong container
+
+✅ **Error Handling:** Implement try-catch và trả về error responses
+
+✅ **Microservice Communication:** Expose internal service qua reverse proxy
+
+✅ **Docker Build Context:** Hiểu cách COPY files vào container image
+
+#### � Screenshots
+
+![API Student - Direct](image/api-student-direct.png)
+_Test endpoint trực tiếp qua port 8085_
+
+![API Student - Gateway](image/api-student-gateway.png)
+_Test endpoint qua API Gateway (port 80)_
+
+![API Student - JSON Response](image/api-student-json.png)
+_JSON response với 5 sinh viên_
+
+#### 🔄 API Gateway Routing
+
+API Gateway (Nginx) đã được cấu hình để route requests:
+
+```nginx
+location /api/ {
+  proxy_pass http://application-backend-server:8081/;
+}
+```
+
+**URL Mapping:**
+
+- `http://localhost/api/student` → `http://application-backend-server:8081/student`
+- `http://localhost/api/hello` → `http://application-backend-server:8081/hello`
+
+#### 💡 Mở Rộng Thêm (Optional)
+
+- [ ] Thêm endpoint POST /student để tạo sinh viên mới
+- [ ] Implement endpoint GET /student/:id để lấy chi tiết 1 sinh viên
+- [ ] Add pagination và sorting cho danh sách
+- [ ] Connect với MariaDB thay vì JSON file
+- [ ] Implement authentication cho protected endpoints
+- [ ] Add input validation với libraries như Joi
+- [ ] Create Swagger/OpenAPI documentation
+
+---
+
+## ��📚 Tài Liệu Tham Khảo
 
 ### Scripts Hữu Ích
 

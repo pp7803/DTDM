@@ -1,0 +1,42 @@
+[
+  {
+    "id": "52000054",
+    "name": "Nguyên Hạnh",
+    "major": "Khoa học Máy tính",
+    "gpa": 3.75,
+    "email": "nguyenhanh@student.tdtu.edu.vn",
+    "year": 3
+  },
+  {
+    "id": "52100985",
+    "name": "Duy Phát",
+    "major": "Mạng Máy tính",
+    "gpa": 3.82,
+    "email": "duyphat@student.tdtu.edu.vn",
+    "year": 3
+  },
+  {
+    "id": "52100989",
+    "name": "Văn Phú",
+    "major": "Hệ thống Thông tin",
+    "gpa": 3.68,
+    "email": "vanphu@student.tdtu.edu.vn",
+    "year": 3
+  },
+  {
+    "id": "52100123",
+    "name": "Minh Tuấn",
+    "major": "Kỹ thuật Phần mềm",
+    "gpa": 3.9,
+    "email": "minhtuan@student.tdtu.edu.vn",
+    "year": 4
+  },
+  {
+    "id": "52000456",
+    "name": "Thu Hà",
+    "major": "An toàn Thông tin",
+    "gpa": 3.55,
+    "email": "thuha@student.tdtu.edu.vn",
+    "year": 2
+  }
+]
