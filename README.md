@@ -1062,7 +1062,8 @@ curl -X POST http://localhost:8081/realms/realm_520000545210098552100989/protoco
 ![Get Token](image/38.png)
 _Lấy access token qua Password Grant flow_
 
-Cách Khắc Phục Lỗi Account is not fully set up
+## Cách Khắc Phục Lỗi Account is not fully set up (nếu có)
+
 Bước 1: Truy cập Keycloak Admin
 Bước 2: Kiểm tra và Fix User sv01
 
