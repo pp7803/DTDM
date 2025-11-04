@@ -1,0 +1,84 @@
+version: "3.9"
+networks:
+  cloud-net:
+    name: cloud-net
+services:
+  web-frontend-server:
+    build: ./web-frontend-server
+    image: minicloud/web
+    ports: ["8080:80"]
+    networks: [cloud-net]
+    restart: unless-stopped
+
+  application-backend-server:
+    build: ./application-backend-server
+    image: minicloud/app
+    ports: ["8085:8081"]
+    networks: [cloud-net]
+    environment:
+      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
+      OIDC_AUDIENCE: "myapp"
+
+  relational-database-server:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: minicloud
+    volumes:
+      - ./relational-database-server/init:/docker-entrypoint-initdb.d
+    ports: ["3306:3306"]
+    networks: [cloud-net]
+
+  authentication-identity-server:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports: ["8081:8080"]
+    networks: [cloud-net]
+
+  object-storage-server:
+    image: minio/minio
+    command: ["server","/data","--console-address",":9001"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./object-storage-server/data:/data
+    ports: ["9000:9000","9001:9001"]
+    networks: [cloud-net]
+
+  internal-dns-server:
+    image: internetsystemsconsortium/bind9:9.18
+    ports: ["1053:53/udp"]
+    volumes:
+      - ./internal-dns-server:/etc/bind
+    networks: [cloud-net]
+
+  monitoring-node-exporter-server:
+    image: prom/node-exporter
+    ports: ["9100:9100"]
+    networks: [cloud-net]
+
+  monitoring-prometheus-server:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports: ["9090:9090"]
+    networks: [cloud-net]
+
+  monitoring-grafana-dashboard-server:
+    image: grafana/grafana
+    ports: ["3000:3000"]
+    networks: [cloud-net]
+
+  api-gateway-proxy-server:
+    image: nginx:stable
+    ports: ["80:80"]
+    volumes:
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web-frontend-server
+      - application-backend-server
+    networks: [cloud-net]
