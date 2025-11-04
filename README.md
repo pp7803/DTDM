@@ -93,7 +93,6 @@
 ├── monitoring-node-exporter-server/        # Node Exporter
 ├── api-gateway-proxy-server/               # Nginx Proxy
 │   └── nginx.conf
-├── test-network-connectivity.sh            # Script test mạng
 └── test-network-detailed.sh                # Script test chi tiết
 ```
 
@@ -325,14 +324,6 @@ curl -I http://localhost/auth/
 docker run --rm --network cloud-net \
   -v "$(pwd)/test-network-detailed.sh:/test.sh:ro" \
   alpine:latest sh /test.sh 2>&1 | head -50
-```
-
-**Hoặc dùng script tổng hợp:**
-
-```bash
-docker run --rm --network cloud-net \
-  -v "$(pwd)/test-network-connectivity.sh:/test.sh:ro" \
-  busybox:latest sh /test.sh
 ```
 
 ![Network Connectivity Test](image/24.png)
