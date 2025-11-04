@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.19.2",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "mysql2": "^3.6.0"
   }
 }

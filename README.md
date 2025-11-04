@@ -869,6 +869,9 @@ app.get("/students/db", async (_req, res) => {
 });
 ```
 
+![Connect DB](image/33.png)
+_UPDATE Kết nối + trả dữ liệu từ DB_
+
 #### 💾 Data Persistence
 
 Database data được lưu trong Docker volume, không bị mất khi restart container:
