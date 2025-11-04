@@ -1111,7 +1111,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 }
 ```
 
-![Test Secure](image/keycloak-secure.png)
+![Test Secure](image/39.png)
 _Test /secure endpoint với Bearer token thành công_
 
 **4. Test qua API Gateway:**
@@ -1120,6 +1120,9 @@ _Test /secure endpoint với Bearer token thành công_
 curl -H "Authorization: Bearer $TOKEN" \
   http://localhost/api/secure
 ```
+
+![Test Secure](image/40.png)
+_Test /secure endpoint với Bearer token thành công_
 
 ---
 
@@ -1140,22 +1143,6 @@ curl -H "Authorization: Bearer $TOKEN" \
 ✅ **Single Sign-On (SSO):** Một lần login → access nhiều applications
 
 ✅ **JWT Verification:** Backend verify token signature với JWKS endpoint
-
-#### 📸 Screenshots
-
-![Keycloak Realm](image/keycloak-realm.png)
-_Realm realm_520000545210098552100989 đã được tạo_
-
-![Keycloak Users](image/keycloak-users.png)
-_2 users sv01 và sv02 trong realm_
-
-![Keycloak Client](image/keycloak-client.png)
-_Client nodejs-app với public access_
-
-![Token Flow](image/keycloak-token-flow.png)
-_Complete token flow: Login → Get Token → Access Protected Resource_
-
----
 
 #### 🔄 Update Backend để sử dụng Realm mới
 
