@@ -467,27 +467,14 @@ curl -I http://localhost/blog/
 
 #### 📸 Screenshots
 
-![Blog Index Page](image/blog-index.png)
-_Trang danh sách blog với 3 bài viết_
-
-![Blog Post - Docker](image/blog-docker.png)
+![Blog Post - Docker](image/25.png)
 _Bài viết về Docker và Containerization_
 
-![Blog Post - Microservices](image/blog-microservices.png)
+![Blog Post - Microservices](image/26.png)
 _Bài viết về Kiến trúc Microservices_
 
-![Blog Post - Monitoring](image/blog-monitoring.png)
+![Blog Post - Monitoring](image/27.png)
 _Bài viết về Monitoring & Observability_
-
-#### 💡 Mở Rộng Thêm (Optional)
-
-- [ ] Add search functionality với JavaScript
-- [ ] Implement commenting system
-- [ ] Add RSS feed cho blog posts
-- [ ] Create admin panel để manage posts
-- [ ] Add analytics tracking (Google Analytics)
-- [ ] Implement dark mode toggle
-- [ ] Add social sharing buttons
 
 ---
 
@@ -501,8 +488,6 @@ _Bài viết về Monitoring & Observability_
 
 **Endpoint:** `GET /student`  
 **Response:** JSON array chứa danh sách 5 sinh viên
-
-![Enhanced REST API](image/25.png)
 
 #### 🎯 Implementation Details
 
@@ -649,14 +634,11 @@ curl -i http://localhost/api/student
 
 #### � Screenshots
 
-![API Student - Direct](image/api-student-direct.png)
+![API Student - Direct](image/28.png)
 _Test endpoint trực tiếp qua port 8085_
 
-![API Student - Gateway](image/api-student-gateway.png)
+![API Student - Gateway](image/29.png)
 _Test endpoint qua API Gateway (port 80)_
-
-![API Student - JSON Response](image/api-student-json.png)
-_JSON response với 5 sinh viên_
 
 #### 🔄 API Gateway Routing
 
