@@ -1489,6 +1489,392 @@ Applications connect to:  MySQL port 3306  →  MinIO port 9000
 
 ---
 
+### 6️⃣ Internal DNS Server - BIND9 Custom DNS Records
+
+**Mục tiêu:** Hiểu về phân giải tên miền nội bộ (internal DNS resolution) trong cloud environment.
+
+#### 📝 Nội Dung Mở Rộng
+
+Thêm **custom DNS records** cho các services trong zone `db.cloud.local` để các containers có thể resolve domain names thay vì dùng IP addresses.
+
+#### 🗂️ DNS Zone File Structure
+
+**File location:** `internal-dns-server/db.cloud.local`
+
+**Current zone file có cấu trúc:**
+
+```dns
+$TTL    604800
+@       IN      SOA     dns.cloud.local. admin.cloud.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      dns.cloud.local.
+dns     IN      A       10.10.10.53
+
+; Existing records
+web-frontend-server     IN      A       10.10.10.10
+```
+
+---
+
+#### ✏️ Bước 1: Thêm DNS Records Mới
+
+**1. Mở file zone:**
+
+```bash
+cd 520000545210098552100989MiniCloud/internal-dns-server
+nano db.cloud.local
+```
+
+**2. Thêm các bản ghi sau vào cuối file:**
+
+```dns
+; Application Backend Server
+app-backend.cloud.local.        IN      A       10.10.10.20
+
+; Object Storage Server
+minio.cloud.local.              IN      A       10.10.10.30
+
+; Authentication Server
+keycloak.cloud.local.           IN      A       10.10.10.40
+```
+
+**3. Update Serial number (quan trọng!):**
+
+Mỗi lần sửa zone file, **phải tăng Serial number** để BIND reload cấu hình:
+
+```dns
+@       IN      SOA     dns.cloud.local. admin.cloud.local. (
+                              3         ; Serial (tăng từ 2 → 3)
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+```
+
+**4. Full zone file sau khi edit:**
+
+```dns
+$TTL    604800
+@       IN      SOA     dns.cloud.local. admin.cloud.local. (
+                              3         ; Serial (updated!)
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      dns.cloud.local.
+dns     IN      A       10.10.10.53
+
+; Web Frontend
+web-frontend-server     IN      A       10.10.10.10
+
+; Application Backend Server (NEW)
+app-backend.cloud.local.        IN      A       10.10.10.20
+
+; Object Storage Server (NEW)
+minio.cloud.local.              IN      A       10.10.10.30
+
+; Authentication Server (NEW)
+keycloak.cloud.local.           IN      A       10.10.10.40
+```
+
+![DNS Zone File](image/49.png)
+_Thêm DNS records vào zone file_
+
+---
+
+#### 🔄 Bước 2: Restart DNS Container
+
+**1. Restart để apply changes:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+docker compose restart internal-dns-server
+```
+
+**2. Check logs để verify reload thành công:**
+
+```bash
+docker compose logs internal-dns-server | tail -20
+```
+
+**Expected output:**
+```
+internal-dns-server-1  | zone cloud.local/IN: loaded serial 3
+internal-dns-server-1  | zone cloud.local/IN: sending notifies (serial 3)
+```
+
+![DNS Restart](image/50.png)
+_Restart DNS container thành công_
+
+---
+
+#### 🧪 Bước 3: Test DNS Resolution
+
+**1. Test với `dig` command:**
+
+```bash
+# Test app-backend record
+dig @127.0.0.1 -p 1053 app-backend.cloud.local +short
+
+# Expected: 10.10.10.20
+```
+
+```bash
+# Test minio record
+dig @127.0.0.1 -p 1053 minio.cloud.local +short
+
+# Expected: 10.10.10.30
+```
+
+```bash
+# Test keycloak record
+dig @127.0.0.1 -p 1053 keycloak.cloud.local +short
+
+# Expected: 10.10.10.40
+```
+
+**2. Test all records:**
+
+```bash
+# Test tất cả records trong một command
+for domain in app-backend.cloud.local minio.cloud.local keycloak.cloud.local; do
+  echo "Testing $domain:"
+  dig @127.0.0.1 -p 1053 $domain +short
+  echo ""
+done
+```
+
+**Expected output:**
+```
+Testing app-backend.cloud.local:
+10.10.10.20
+
+Testing minio.cloud.local:
+10.10.10.30
+
+Testing keycloak.cloud.local:
+10.10.10.40
+```
+
+![DNS Resolution Test](image/51.png)
+_Verify DNS records với dig command_
+
+---
+
+#### 🐳 Bước 4: Test DNS từ Containers
+
+**1. Test resolution từ container khác:**
+
+```bash
+# Test từ Alpine container
+docker run --rm --network cloud-net alpine:latest \
+  sh -c "apk add --no-cache bind-tools && \
+         nslookup app-backend.cloud.local internal-dns-server"
+```
+
+**Expected output:**
+```
+Server:         10.10.10.53
+Address:        10.10.10.53#53
+
+Name:   app-backend.cloud.local
+Address: 10.10.10.20
+```
+
+**2. Test ping domain từ container:**
+
+```bash
+docker run --rm --network cloud-net alpine:latest \
+  ping -c 3 app-backend.cloud.local
+```
+
+**Expected:**
+```
+PING app-backend.cloud.local (10.10.10.20): 56 data bytes
+64 bytes from 10.10.10.20: seq=0 ttl=64 time=0.123 ms
+64 bytes from 10.10.10.20: seq=1 ttl=64 time=0.098 ms
+64 bytes from 10.10.10.20: seq=2 ttl=64 time=0.105 ms
+```
+
+![Container DNS Test](image/52.png)
+_Test DNS resolution từ container_
+
+---
+
+#### 🔍 Bước 5: Verify DNS Integration
+
+**1. Test containers có thể resolve nhau qua DNS:**
+
+```bash
+# Backend container resolve MinIO
+docker compose exec application-backend-server \
+  sh -c "apk add --no-cache bind-tools && nslookup minio.cloud.local"
+
+# Backend container resolve Keycloak
+docker compose exec application-backend-server \
+  sh -c "nslookup keycloak.cloud.local"
+```
+
+**2. Test curl với domain names:**
+
+```bash
+# Test HTTP request dùng domain name thay vì IP
+docker run --rm --network cloud-net curlimages/curl:latest \
+  curl -I http://app-backend.cloud.local:8081/hello
+
+# Expected: HTTP/1.1 200 OK
+```
+
+---
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **DNS Zone File:** Hiểu cấu trúc zone file (SOA, NS, A records)
+
+✅ **Serial Number:** Tầm quan trọng của Serial trong zone file (phải tăng khi update)
+
+✅ **DNS Record Types:**
+- **SOA (Start of Authority):** Metadata về zone
+- **NS (Name Server):** Authoritative DNS server
+- **A (Address):** Map domain → IPv4 address
+- **TTL (Time To Live):** Cache duration
+
+✅ **DNS Resolution Process:** Query flow từ client → DNS server → response
+
+✅ **Internal DNS:** Private DNS cho container networking (không expose ra internet)
+
+✅ **DNS Caching:** BIND cache responses để giảm latency
+
+✅ **Container Networking:** Containers dùng DNS để discover services (service discovery)
+
+✅ **dig/nslookup Tools:** Debug và test DNS resolution
+
+✅ **DNS vs IP:** Domain names dễ maintain hơn hardcoded IPs
+
+#### 📊 DNS Records Summary
+
+| Domain | Record Type | IP Address | Service |
+|--------|-------------|------------|---------|
+| `web-frontend-server.cloud.local` | A | 10.10.10.10 | Nginx Web Server |
+| `app-backend.cloud.local` | A | 10.10.10.20 | Node.js Backend API |
+| `minio.cloud.local` | A | 10.10.10.30 | MinIO Object Storage |
+| `keycloak.cloud.local` | A | 10.10.10.40 | Keycloak Auth Server |
+| `dns.cloud.local` | A | 10.10.10.53 | BIND9 DNS Server |
+
+#### 🔧 DNS Configuration Files
+
+```
+internal-dns-server/
+├── db.cloud.local          # Zone file (A records)
+├── named.conf.local        # Zone declaration
+├── named.conf.options      # DNS server options
+└── named.conf              # Main config (includes above files)
+```
+
+#### 🛠️ Troubleshooting DNS
+
+**1. DNS không resolve:**
+
+```bash
+# Check DNS container status
+docker compose ps internal-dns-server
+
+# Check logs
+docker compose logs internal-dns-server | grep -i error
+
+# Restart DNS
+docker compose restart internal-dns-server
+```
+
+**2. Serial number không tăng:**
+
+```bash
+# Check current serial
+dig @127.0.0.1 -p 1053 cloud.local SOA
+
+# Output shows current serial number
+```
+
+**3. Verify zone file syntax:**
+
+```bash
+# Enter DNS container
+docker compose exec internal-dns-server sh
+
+# Check zone syntax
+named-checkzone cloud.local /etc/bind/db.cloud.local
+
+# Should output: "OK" if no errors
+```
+
+**4. Cache issues:**
+
+```bash
+# Flush DNS cache trong container
+docker compose exec internal-dns-server rndc flush
+
+# Hoặc restart DNS server
+docker compose restart internal-dns-server
+```
+
+#### 📸 Screenshots
+
+![DNS Zone Edit](image/53.png)
+_Edit zone file với custom records_
+
+![DNS Serial Update](image/54.png)
+_Update Serial number trước khi restart_
+
+![DNS Test Results](image/55.png)
+_Test results cho tất cả DNS records_
+
+![Container Service Discovery](image/56.png)
+_Containers communicate via DNS names_
+
+---
+
+#### 💡 Best Practices
+
+**1. Always update Serial when editing zone file:**
+```dns
+; Good practice: Use YYYYMMDDNN format
+Serial: 2025110401  (2025-11-04, version 01)
+```
+
+**2. Use FQDN (Fully Qualified Domain Names):**
+```dns
+; Good (with trailing dot)
+app-backend.cloud.local.    IN      A       10.10.10.20
+
+; Also works (without dot - BIND adds zone automatically)
+app-backend                 IN      A       10.10.10.20
+```
+
+**3. Consistent naming convention:**
+```
+[service-name].cloud.local
+web-frontend.cloud.local
+app-backend.cloud.local
+minio.cloud.local
+```
+
+**4. Document IP assignments:**
+```
+10.10.10.10-19  → Web/Frontend services
+10.10.10.20-29  → Backend/API services
+10.10.10.30-39  → Storage services
+10.10.10.40-49  → Auth services
+10.10.10.50-59  → Infrastructure (DNS, monitoring)
+```
+
+---
+
 ### Scripts Hữu Ích
 
 **Script kiểm tra mạng chi tiết:**
