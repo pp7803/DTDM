@@ -1,87 +1,148 @@
-version: "3.9"
 networks:
   cloud-net:
     name: cloud-net
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+          gateway: 10.10.10.1
+
 services:
   web-frontend-server:
     build: ./web-frontend-server
     image: minicloud/web
     ports: ["8080:80"]
-    networks: [cloud-net]
+    networks:
+      cloud-net:
+        ipv4_address: 10.10.10.10
+    dns:
+      - 10.10.10.53 # ← Point to internal DNS
+      - 8.8.8.8 # ← Fallback to Google DNS
     restart: unless-stopped
 
   application-backend-server:
     build: ./application-backend-server
     image: minicloud/app
     ports: ["8085:8081"]
-    networks: [cloud-net]
-    environment:
-      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
-      OIDC_AUDIENCE: "myapp"
+    networks:
+      cloud-net:
+        ipv4_address: 10.10.10.20
+    dns:
+      - 10.10.10.53 # ← Point to internal DNS
+      - 8.8.8.8
+    restart: unless-stopped
 
   relational-database-server:
     image: mariadb:11
     environment:
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_DATABASE: minicloud
+      MYSQL_ROOT_PASSWORD: root
     volumes:
-      - ./relational-database-server/init:/docker-entrypoint-initdb.d
-    ports: ["3306:3306"]
-    networks: [cloud-net]
+      - db-data:/var/lib/mysql
+      - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - cloud-net
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   authentication-identity-server:
-    image: quay.io/keycloak/keycloak:26.0
-    command: ["start-dev"]
+    image: quay.io/keycloak/keycloak:latest
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
     ports: ["8081:8080"]
-    networks: [cloud-net]
+    networks:
+      cloud-net:
+        ipv4_address: 10.10.10.40
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   object-storage-server:
-    image: minio/minio
-    command: ["server", "/data", "--console-address", ":9001"]
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - ./object-storage-server/data:/data
-    ports: ["9000:9000", "9001:9001"]
-    networks: [cloud-net]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      cloud-net:
+        ipv4_address: 10.10.10.30
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   internal-dns-server:
-    image: internetsystemsconsortium/bind9:9.18
-    ports: ["1053:53/udp"]
+    image: ubuntu/bind9:latest
     volumes:
-      - ./internal-dns-server:/etc/bind
-    networks: [cloud-net]
+      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
+      - ./internal-dns-server/named.conf.local:/etc/bind/named.conf.local:ro
+      - ./internal-dns-server/named.conf.options:/etc/bind/named.conf.options:ro
+    ports:
+      - "1053:53/udp"
+      - "1053:53/tcp"
+    networks:
+      cloud-net:
+        ipv4_address: 10.10.10.53
+    restart: unless-stopped
 
   monitoring-node-exporter-server:
-    image: prom/node-exporter
+    image: prom/node-exporter:latest
     ports: ["9100:9100"]
-    networks: [cloud-net]
+    networks:
+      - cloud-net
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   monitoring-prometheus-server:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     volumes:
-      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports: ["9090:9090"]
     networks:
       cloud-net:
         aliases:
           - prometheus
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   monitoring-grafana-dashboard-server:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     ports: ["3000:3000"]
-    networks: [cloud-net]
+    networks:
+      - cloud-net
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    restart: unless-stopped
 
   api-gateway-proxy-server:
-    image: nginx:stable
-    ports: ["80:80"]
+    image: nginx:latest
     volumes:
-      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports: ["80:80"]
+    networks:
+      - cloud-net
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
     depends_on:
       - web-frontend-server
       - application-backend-server
-    networks: [cloud-net]
+      - authentication-identity-server
+    restart: unless-stopped
+
+volumes:
+  db-data:

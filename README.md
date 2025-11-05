@@ -1583,7 +1583,7 @@ minio.cloud.local.              IN      A       10.10.10.30
 keycloak.cloud.local.           IN      A       10.10.10.40
 ```
 
-![DNS Zone File](image/49.png)
+![DNS Zone File](image/45.png)
 _Thêm DNS records vào zone file_
 
 ---
@@ -1604,12 +1604,13 @@ docker compose logs internal-dns-server | tail -20
 ```
 
 **Expected output:**
+
 ```
 internal-dns-server-1  | zone cloud.local/IN: loaded serial 3
 internal-dns-server-1  | zone cloud.local/IN: sending notifies (serial 3)
 ```
 
-![DNS Restart](image/50.png)
+![DNS Restart](image/46.png)
 _Restart DNS container thành công_
 
 ---
@@ -1651,6 +1652,7 @@ done
 ```
 
 **Expected output:**
+
 ```
 Testing app-backend.cloud.local:
 10.10.10.20
@@ -1662,7 +1664,7 @@ Testing keycloak.cloud.local:
 10.10.10.40
 ```
 
-![DNS Resolution Test](image/51.png)
+![DNS Resolution Test](image/47.png)
 _Verify DNS records với dig command_
 
 ---
@@ -1679,6 +1681,7 @@ docker run --rm --network cloud-net alpine:latest \
 ```
 
 **Expected output:**
+
 ```
 Server:         10.10.10.53
 Address:        10.10.10.53#53
@@ -1687,23 +1690,31 @@ Name:   app-backend.cloud.local
 Address: 10.10.10.20
 ```
 
-**2. Test ping domain từ container:**
+![Container DNS Test](image/48.png)
+_Test DNS resolution từ container_
+
+**2. Test ping với Docker service names:**
 
 ```bash
+# Alpine containers không tự động dùng custom DNS
+# Nên dùng Docker service names (được Docker DNS resolve tự động)
 docker run --rm --network cloud-net alpine:latest \
-  ping -c 3 app-backend.cloud.local
+  ping -c 3 application-backend-server
 ```
 
 **Expected:**
+
 ```
-PING app-backend.cloud.local (10.10.10.20): 56 data bytes
-64 bytes from 10.10.10.20: seq=0 ttl=64 time=0.123 ms
-64 bytes from 10.10.10.20: seq=1 ttl=64 time=0.098 ms
-64 bytes from 10.10.10.20: seq=2 ttl=64 time=0.105 ms
+PING application-backend-server (172.18.0.5): 56 data bytes
+64 bytes from 172.18.0.5: seq=0 ttl=64 time=0.123 ms
+64 bytes from 172.18.0.5: seq=1 ttl=64 time=0.098 ms
+64 bytes from 172.18.0.5: seq=2 ttl=64 time=0.105 ms
 ```
 
-![Container DNS Test](image/52.png)
-_Test DNS resolution từ container_
+![ping Test](image/49.png)
+_Test ping với Docker service names_
+
+**⚠️ Lưu ý:** Alpine containers mặc định dùng Docker's embedded DNS (127.0.0.11), không phải custom DNS server. Để dùng custom DNS names, containers phải được configure với `dns` option trong `docker-compose.yml`.
 
 ---
 
@@ -1721,15 +1732,41 @@ docker compose exec application-backend-server \
   sh -c "nslookup keycloak.cloud.local"
 ```
 
+![DNS Test](image/50.png)
+_Test containers có thể resolve nhau qua DNS_
+
 **2. Test curl với domain names:**
 
 ```bash
 # Test HTTP request dùng domain name thay vì IP
-docker run --rm --network cloud-net curlimages/curl:latest \
+# Phải thêm --dns 10.10.10.53 để container sử dụng custom DNS
+docker run --rm --network cloud-net --dns 10.10.10.53 \
+  curlimages/curl:latest \
   curl -I http://app-backend.cloud.local:8081/hello
 
 # Expected: HTTP/1.1 200 OK
 ```
+
+![DNS Curl Test](image/51.png)
+_Test HTTP request với custom domain names_
+
+```bash
+# Test MinIO với custom domain
+docker run --rm --network cloud-net --dns 10.10.10.53 \
+  curlimages/curl:latest \
+  curl -I http://minio.cloud.local:9000/minio/health/live
+
+# Test Keycloak với custom domain
+docker run --rm --network cloud-net --dns 10.10.10.53 \
+  curlimages/curl:latest \
+  curl -I http://keycloak.cloud.local:8080/health
+```
+
+![DNS Curl Test](image/52.png)
+_Test MinIO với custom domain_
+
+![DNS Curl Test](image/53.png)
+_Test Keycloak với custom domain_
 
 ---
 
@@ -1740,6 +1777,7 @@ docker run --rm --network cloud-net curlimages/curl:latest \
 ✅ **Serial Number:** Tầm quan trọng của Serial trong zone file (phải tăng khi update)
 
 ✅ **DNS Record Types:**
+
 - **SOA (Start of Authority):** Metadata về zone
 - **NS (Name Server):** Authoritative DNS server
 - **A (Address):** Map domain → IPv4 address
@@ -1759,13 +1797,13 @@ docker run --rm --network cloud-net curlimages/curl:latest \
 
 #### 📊 DNS Records Summary
 
-| Domain | Record Type | IP Address | Service |
-|--------|-------------|------------|---------|
-| `web-frontend-server.cloud.local` | A | 10.10.10.10 | Nginx Web Server |
-| `app-backend.cloud.local` | A | 10.10.10.20 | Node.js Backend API |
-| `minio.cloud.local` | A | 10.10.10.30 | MinIO Object Storage |
-| `keycloak.cloud.local` | A | 10.10.10.40 | Keycloak Auth Server |
-| `dns.cloud.local` | A | 10.10.10.53 | BIND9 DNS Server |
+| Domain                            | Record Type | IP Address  | Service              |
+| --------------------------------- | ----------- | ----------- | -------------------- |
+| `web-frontend-server.cloud.local` | A           | 10.10.10.10 | Nginx Web Server     |
+| `app-backend.cloud.local`         | A           | 10.10.10.20 | Node.js Backend API  |
+| `minio.cloud.local`               | A           | 10.10.10.30 | MinIO Object Storage |
+| `keycloak.cloud.local`            | A           | 10.10.10.40 | Keycloak Auth Server |
+| `dns.cloud.local`                 | A           | 10.10.10.53 | BIND9 DNS Server     |
 
 #### 🔧 DNS Configuration Files
 
@@ -1823,31 +1861,17 @@ docker compose exec internal-dns-server rndc flush
 docker compose restart internal-dns-server
 ```
 
-#### 📸 Screenshots
-
-![DNS Zone Edit](image/53.png)
-_Edit zone file với custom records_
-
-![DNS Serial Update](image/54.png)
-_Update Serial number trước khi restart_
-
-![DNS Test Results](image/55.png)
-_Test results cho tất cả DNS records_
-
-![Container Service Discovery](image/56.png)
-_Containers communicate via DNS names_
-
----
-
 #### 💡 Best Practices
 
 **1. Always update Serial when editing zone file:**
+
 ```dns
 ; Good practice: Use YYYYMMDDNN format
 Serial: 2025110401  (2025-11-04, version 01)
 ```
 
 **2. Use FQDN (Fully Qualified Domain Names):**
+
 ```dns
 ; Good (with trailing dot)
 app-backend.cloud.local.    IN      A       10.10.10.20
@@ -1857,6 +1881,7 @@ app-backend                 IN      A       10.10.10.20
 ```
 
 **3. Consistent naming convention:**
+
 ```
 [service-name].cloud.local
 web-frontend.cloud.local
@@ -1865,6 +1890,7 @@ minio.cloud.local
 ```
 
 **4. Document IP assignments:**
+
 ```
 10.10.10.10-19  → Web/Frontend services
 10.10.10.20-29  → Backend/API services
