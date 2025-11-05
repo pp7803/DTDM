@@ -892,8 +892,6 @@ docker compose exec -T relational-database-server \
   mysql -uroot -proot studentdb < backup.sql
 ```
 
----
-
 ### 4️⃣ Authentication Identity Server - Keycloak SSO & OIDC
 
 **Mục tiêu:** Làm quen với Identity Provider (IdP), Single Sign-On (SSO), và OAuth2/OIDC flow.
@@ -1242,6 +1240,252 @@ curl http://localhost:8085/secure
 curl -H "Authorization: Bearer invalid_token" http://localhost:8085/secure
 # Response: 401 Unauthorized
 ```
+
+---
+
+---
+
+### 5️⃣ Object Storage Server - MinIO Buckets & Access Control
+
+**Mục tiêu:** Hiểu cơ chế bucket, object, endpoint URL, và policy (private/public) của dịch vụ lưu trữ đám mây.
+
+#### 📝 Nội Dung Mở Rộng
+
+Tạo buckets `profile-pics` và `documents`, upload files, và quản lý access control (public/private) qua MinIO Client.
+
+#### 🪣 MinIO Architecture
+
+**MinIO có 2 ports:**
+
+| Port     | Service         | Purpose                                                          |
+| -------- | --------------- | ---------------------------------------------------------------- |
+| **9000** | **API Server**  | S3-compatible API endpoint (upload, download, policy management) |
+| **9001** | **Web Console** | Browser-based GUI để quản lý qua giao diện web                   |
+
+**⚠️ Lưu ý quan trọng:**
+
+- MinIO Client (`mc`) **luôn kết nối tới port 9000** (API endpoint)
+- Web Console (port 9001) chỉ dùng cho GUI trong browser
+- **Từ MinIO v24+**, tính năng **set bucket policy qua GUI đã bị ẩn** - phải dùng CLI (`mc`) hoặc API
+
+---
+
+#### 🔧 Bước 1: Tạo Buckets và Upload Files
+
+**1. Tạo bucket `profile-pics` qua Web Console:**
+
+```
+1. Truy cập http://localhost:9001
+2. Login: minioadmin / minioadmin
+3. Click "Buckets" → "Create Bucket"
+4. Bucket Name: profile-pics
+5. Click "Create Bucket"
+
+6. Click vào bucket "profile-pics"
+7. Click "Upload" → "Upload File"
+8. Chọn file avatar.jpg từ máy
+9. Click "Upload" và Upload file avatar.png
+```
+
+![Upload Avatar](image/41.png)
+_Upload ảnh đại diện vào bucket_
+
+**3. Tạo bucket `documents` và upload PDF:**
+
+Làm tương tự với bucket `documents` và upload file `report.pdf`.
+
+---
+
+#### 🔐 Bước 2: Quản Lý Access Control qua MinIO Client
+
+**MinIO từ v24+ đã ẩn GUI để set bucket policy.** Phải dùng **MinIO Client (mc)** qua command line.
+
+##### Option 1: Dùng Docker Container (không cần cài mc)
+
+**Set Bucket to PUBLIC (download only):**
+
+```bash
+docker run --rm --network cloud-net \
+  --entrypoint /bin/sh \
+  minio/mc -c "
+    mc alias set minicloud http://object-storage-server:9000 minioadmin minioadmin && \
+    mc anonymous set download minicloud/profile-pics && \
+    mc anonymous get minicloud/profile-pics
+  "
+```
+
+**Output:**
+
+```
+Added `minicloud` successfully.
+Access permission for `minicloud/profile-pics` is set to `download`
+Access permission for `minicloud/profile-pics` is `download`
+```
+
+**Set Bucket to PRIVATE:**
+
+```bash
+docker run --rm --network cloud-net \
+  --entrypoint /bin/sh \
+  minio/mc -c "
+    mc alias set minicloud http://object-storage-server:9000 minioadmin minioadmin && \
+    mc anonymous set none minicloud/profile-pics && \
+    mc anonymous get minicloud/profile-pics
+  "
+```
+
+**Output:**
+
+```
+Added `minicloud` successfully.
+Access permission for `minicloud/profile-pics` is set to `none`
+Access permission for `minicloud/profile-pics` is `none`
+```
+
+![MinIO Policy CLI](image/42.png)
+_Set bucket policy (Public) qua MinIO Client_
+
+#### 🔓 Bước 3: Test Public vs Private Access
+
+**1. Khi bucket là PUBLIC (download policy):**
+
+```bash
+# Lấy public URL
+echo "http://localhost:9000/profile-pics/avatar.png"
+
+# Test access WITHOUT authentication (should work ✅)
+curl -I http://localhost:9000/profile-pics/avatar.png
+
+# Expected: HTTP/1.1 200 OK
+```
+
+**Response:**
+
+```
+HTTP/1.1 200 OK
+Content-Type: image/jpeg
+Content-Length: 245678
+ETag: "abc123def456"
+Last-Modified: Mon, 04 Nov 2025 20:30:00 GMT
+```
+
+**Mở trong browser (should work):**
+
+```bash
+open http://localhost:9000/profile-pics/avatar.png
+```
+
+![Public Access](image/43.png)
+_Truy cập public URL thành công_
+
+---
+
+**2. Khi bucket là PRIVATE (none policy):**
+
+```bash
+# Test access WITHOUT authentication (should fail ❌)
+curl -I http://localhost:9000/profile-pics/avatar.png
+
+# Expected: HTTP/1.1 403 Forbidden
+```
+
+**Response:**
+
+```xml
+HTTP/1.1 403 Forbidden
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>AccessDenied</Code>
+  <Message>Access Denied</Message>
+  <Resource>/profile-pics/avatar.jpg</Resource>
+</Error>
+```
+
+![Private Access Denied](image/44.png)
+_Access bị từ chối với private bucket_
+
+---
+
+#### 📦 Bước 5: Quản Lý Bucket `documents`
+
+**Set policy cho bucket documents:**
+
+```bash
+# Set public
+docker run --rm --network cloud-net \
+  --entrypoint /bin/sh \
+  minio/mc -c "
+    mc alias set minicloud http://object-storage-server:9000 minioadmin minioadmin && \
+    mc anonymous set download minicloud/documents && \
+    mc ls minicloud/documents
+  "
+
+# Test URL
+curl -I http://localhost:9000/documents/report.pdf
+```
+
+**List all files trong bucket:**
+
+```bash
+docker run --rm --network cloud-net \
+  --entrypoint /bin/sh \
+  minio/mc -c "
+    mc alias set minicloud http://object-storage-server:9000 minioadmin minioadmin && \
+    mc ls minicloud/profile-pics && \
+    mc ls minicloud/documents
+  "
+```
+
+---
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **MinIO Architecture:** Hiểu phân biệt API port (9000) vs Console port (9001)
+
+✅ **Bucket Concept:** Object storage container tương tự AWS S3 buckets
+
+✅ **Access Policies:** Private (`none`), Public Read (`download`), Public Write (`upload`), Full Public (`public`)
+
+✅ **MinIO Client (mc):** Command-line tool để quản lý buckets và objects
+
+✅ **Object URLs:** Direct access URLs với format `http://endpoint:9000/bucket/object`
+
+✅ **Anonymous Access:** Public access không cần authentication
+
+✅ **GUI Limitations:** Từ MinIO v24+, phải dùng CLI để set bucket policies
+
+#### 📊 MinIO Policy Levels
+
+| Policy     | Read | Write | Use Case                                    |
+| ---------- | ---- | ----- | ------------------------------------------- |
+| `none`     | ❌   | ❌    | Private (default) - chỉ authenticated users |
+| `download` | ✅   | ❌    | Public read-only (static assets, CDN)       |
+| `upload`   | ❌   | ✅    | Public write-only (form uploads)            |
+| `public`   | ✅   | ✅    | Full public (không khuyến khích)            |
+
+**Best practice:**
+
+- **Development:** `download` (public read)
+- **Production:** `none` + pre-signed URLs với expiration
+
+#### 🔄 Why Port 9000 (not 9001)?
+
+**Analogy với Database:**
+
+```
+MySQL Workbench (GUI)     ←→  MinIO Console (port 9001)
+MySQL Server (API)        ←→  MinIO API Server (port 9000)
+
+Applications connect to:  MySQL port 3306  →  MinIO port 9000
+```
+
+**MinIO Client (`mc`) là CLI tool** - nó kết nối tới **API server (port 9000)**, không phải Web Console (port 9001).
+
+**MinIO v24+ Changes:**
+
+- Trước v24: Có thể set bucket policy qua GUI (Console)
+- Từ v24+: **Tính năng set policy qua GUI đã bị ẩn/loại bỏ**
+- Lý do: MinIO muốn khuyến khích dùng IaC (Infrastructure as Code) và automation
 
 ---
 
