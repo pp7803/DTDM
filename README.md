@@ -1515,6 +1515,24 @@ docker compose restart [service-name]
 docker compose down -v
 ```
 
+**Build lại images:**
+
+```bash
+docker compose build
+```
+
+**Khởi động tất cả services**
+
+```bash
+docker compose up -d
+```
+
+**Kiểm tra trạng thái**
+
+```bash
+docker compose ps
+```
+
 ### Thông Tin Đăng Nhập Mặc Định
 
 | Service  | Username   | Password   |
