@@ -104,6 +104,20 @@ services:
       - 8.8.8.8
     restart: unless-stopped
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    command:
+      - "-nginx.scrape-uri=http://web-frontend-server:80/stub_status"
+    ports: ["9113:9113"]
+    networks:
+      - cloud-net
+    dns:
+      - 10.10.10.53
+      - 8.8.8.8
+    depends_on:
+      - web-frontend-server
+    restart: unless-stopped
+
   monitoring-prometheus-server:
     image: prom/prometheus:latest
     volumes:

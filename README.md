@@ -1901,6 +1901,538 @@ minio.cloud.local
 
 ---
 
+### 7️⃣ Monitoring Prometheus - Web Frontend Metrics
+
+**Mục tiêu:** Nắm vững nguyên tắc giám sát metrics và scrape target với Prometheus.
+
+#### 📝 Nội Dung Mở Rộng
+
+Thêm **target mới** để giám sát web-frontend-server bằng cách sử dụng **Nginx Prometheus Exporter**.
+
+#### 🏗️ Kiến Trúc Monitoring
+
+```
+┌─────────────────────┐
+│  Web Frontend (80)  │
+│     Nginx Server    │
+│  /stub_status       │
+└──────────┬──────────┘
+           │
+           │ scrape stub_status
+           ▼
+┌─────────────────────┐
+│  Nginx Exporter     │
+│   (Port 9113)       │
+│  /metrics           │
+└──────────┬──────────┘
+           │
+           │ scrape metrics
+           ▼
+┌─────────────────────┐
+│   Prometheus        │
+│   (Port 9090)       │
+│  Time Series DB     │
+└─────────────────────┘
+```
+
+---
+
+#### 🔧 Bước 1: Enable Nginx Stub Status
+
+**1. Update `web-frontend-server/conf.default`:**
+
+```nginx
+server {
+  listen 80;
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location / { try_files $uri $uri/ =404; }
+  location ^~ /blog/ {
+    alias /usr/share/nginx/html/blog/;
+    index index.html;
+    autoindex off;
+  }
+
+  # Stub status endpoint for Prometheus metrics
+  location /stub_status {
+    stub_status;
+    allow 10.10.10.0/24;  # Only internal network
+    deny all;
+  }
+}
+```
+
+**Giải thích:**
+
+- **`stub_status`**: Module của Nginx để expose basic metrics
+- **`allow 10.10.10.0/24`**: Chỉ cho phép truy cập từ internal network
+- **`deny all`**: Chặn tất cả requests từ bên ngoài
+
+![Nginx Config](image/54.png)
+_Cấu hình stub_status endpoint_
+
+---
+
+#### 🐳 Bước 2: Add Nginx Exporter Container
+
+**1. Update `docker-compose.yml` - thêm service mới:**
+
+```yaml
+nginx-exporter:
+  image: nginx/nginx-prometheus-exporter:latest
+  command:
+    - "-nginx.scrape-uri=http://web-frontend-server:80/stub_status"
+  ports: ["9113:9113"]
+  networks:
+    - cloud-net
+  dns:
+    - 10.10.10.53
+    - 8.8.8.8
+  depends_on:
+    - web-frontend-server
+  restart: unless-stopped
+```
+
+**Giải thích:**
+
+- **Image**: Official Nginx Prometheus Exporter từ Nginx team
+- **Command**: URL tới stub_status endpoint của Nginx
+- **Port 9113**: Exporter expose metrics ở port này
+- **depends_on**: Đảm bảo web-frontend-server start trước
+
+![Docker Compose](image/55.png)
+_Thêm nginx-exporter service_
+
+---
+
+#### 📊 Bước 3: Update Prometheus Configuration
+
+**1. Update `monitoring-prometheus-server/prometheus.yml`:**
+
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "node"
+    static_configs:
+      - targets: ["monitoring-node-exporter-server:9100"]
+
+  - job_name: "web"
+    static_configs:
+      - targets: ["nginx-exporter:9113"]
+```
+
+**Giải thích:**
+
+- **job_name: 'web'**: Tên job để nhận diện trong Prometheus UI
+- **targets**: DNS name và port của nginx-exporter
+- **scrape_interval**: Prometheus sẽ scrape metrics mỗi 15 giây
+
+![Prometheus Config](image/56.png)
+_Cấu hình Prometheus với job 'web'_
+
+---
+
+#### 🚀 Bước 4: Deploy và Verify
+
+**1. Rebuild web-frontend-server:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+
+# Rebuild với cấu hình mới
+docker compose build web-frontend-server
+
+# Restart containers
+docker compose up -d
+```
+
+**2. Verify nginx-exporter:**
+
+```bash
+# Check container status
+docker compose ps nginx-exporter
+
+# Check logs
+docker compose logs -f nginx-exporter
+```
+
+**Expected logs:**
+
+```
+nginx-exporter-1  | Server is starting...
+nginx-exporter-1  | Listening on :9113
+```
+
+**3. Test stub_status endpoint:**
+
+```bash
+# Test từ host machine (sẽ bị 403 Forbidden - đúng như expected)
+curl http://localhost:8080/stub_status
+# Output: 403 Forbidden (chỉ cho phép internal network)
+
+# Test từ internal network (dùng temporary container)
+docker run --rm --network cloud-net curlimages/curl:latest \
+  curl -s http://web-frontend-server:80/stub_status
+```
+
+**Expected output khi test từ internal network:**
+
+```
+Active connections: 2
+server accepts handled requests
+ 34 34 2307
+Reading: 0 Writing: 1 Waiting: 1
+```
+
+**Giải thích:**
+
+- Từ host machine (localhost:8080): **403 Forbidden** - vì chỉ cho phép internal network (10.10.10.0/24)
+- Từ container trong cloud-net: **200 OK** - vì IP thuộc 10.10.10.0/24
+
+![Stub Status](image/57.png)
+_Test stub_status từ internal network_
+
+**4. Test nginx-exporter metrics:**
+
+```bash
+# Test exporter endpoint
+curl http://localhost:9113/metrics
+
+# Hoặc với filtering (chỉ lấy nginx metrics)
+curl -s http://localhost:9113/metrics | grep "^nginx_"
+```
+
+**Expected output (sample):**
+
+```
+nginx_connections_accepted 34
+nginx_connections_active 1
+nginx_connections_handled 34
+nginx_connections_reading 0
+nginx_connections_waiting 0
+nginx_connections_writing 1
+nginx_http_requests_total 2309
+nginx_up 1
+```
+
+**Giải thích các metrics:**
+
+- **nginx_connections_accepted**: Tổng số connections đã accept
+- **nginx_connections_active**: Số connections đang active
+- **nginx_http_requests_total**: Tổng số HTTP requests
+- **nginx_up**: Exporter health status (1 = UP, 0 = DOWN)
+
+![Exporter Metrics](image/58.png)
+_Nginx Exporter metrics endpoint_
+
+---
+
+#### 🎯 Bước 5: Verify Prometheus Targets
+
+**1. Mở Prometheus UI:**
+
+```bash
+# Truy cập Prometheus
+open http://localhost:9090/targets
+```
+
+**2. Kiểm tra targets:**
+
+Trong tab **Status → Targets**, bạn sẽ thấy:
+
+| Endpoint              | State  | Labels                                                          | Last Scrape |
+| --------------------- | ------ | --------------------------------------------------------------- | ----------- |
+| `prometheus (1/1 up)` | **UP** | `instance="localhost:9090"`, `job="prometheus"`                 | 2s ago      |
+| `node (1/1 up)`       | **UP** | `instance="monitoring-node-exporter-server:9100"`, `job="node"` | 5s ago      |
+| `web (1/1 up)`        | **UP** | `instance="nginx-exporter:9113"`, `job="web"`                   | 3s ago      |
+
+![Prometheus Targets](image/59.png)
+_Tất cả targets đều UP_
+
+**3. Nếu target 'web' là DOWN:**
+
+```bash
+# Check nginx-exporter logs
+docker compose logs nginx-exporter
+
+# Check Prometheus logs
+docker compose logs monitoring-prometheus-server
+
+# Verify connectivity
+docker compose exec monitoring-prometheus-server \
+  sh -c "wget -O- http://nginx-exporter:9113/metrics"
+```
+
+---
+
+#### 📈 Bước 6: Query Nginx Metrics trong Prometheus
+
+**1. Truy cập Prometheus Graph:**
+
+```bash
+open http://localhost:9090/graph
+```
+
+**2. Thử các queries:**
+
+**Query 1: Active connections**
+
+```promql
+nginx_connections_active
+```
+
+**Query 2: Total requests**
+
+```promql
+nginx_http_requests_total
+```
+
+**Query 3: Requests per second (rate over 1 minute)**
+
+```promql
+rate(nginx_http_requests_total[1m])
+```
+
+**Query 4: Connection acceptance rate**
+
+```promql
+rate(nginx_connections_accepted[5m])
+```
+
+![Prometheus Query](image/60.png)
+_Query Nginx metrics trong Prometheus_
+
+**3. Test queries qua API:**
+
+```bash
+# Query nginx_up
+curl -s 'http://localhost:9090/api/v1/query?query=nginx_up' | python3 -m json.tool
+
+# Query total requests
+curl -s 'http://localhost:9090/api/v1/query?query=nginx_http_requests_total' | python3 -m json.tool
+
+# Query rate (escape brackets trong shell)
+curl -s 'http://localhost:9090/api/v1/query?query=rate(nginx_http_requests_total\[1m\])'
+```
+
+**4. Generate traffic để xem metrics thay đổi:**
+
+```bash
+# Gửi 50 requests
+echo "Generating traffic..." && \
+for i in {1..50}; do curl -s http://localhost:8080/ > /dev/null; done && \
+echo "Done! Sent 50 requests"
+
+# Wait và xem metrics update
+sleep 5
+curl -s 'http://localhost:9090/api/v1/query?query=nginx_http_requests_total'
+
+# Xem metrics từ exporter
+curl -s http://localhost:9113/metrics | grep "^nginx_http_requests_total"
+```
+
+**Expected:**
+
+- Metrics sẽ tăng từ giá trị cũ + 50 requests
+- Rate sẽ hiển thị requests/second (~0.8-1.0 req/s)
+
+---
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **Prometheus Scrape Configs:** Hiểu cách cấu hình targets và jobs
+
+✅ **Job Name:** Tên để nhận diện và group targets trong Prometheus
+
+✅ **Metrics Endpoint:** Services expose metrics tại `/metrics` endpoint (Prometheus format)
+
+✅ **Exporter Pattern:** Sử dụng exporter để convert metrics từ app → Prometheus format
+
+✅ **Nginx Stub Status:** Module tích hợp sẵn của Nginx để expose basic metrics
+
+✅ **Time Series Data:** Prometheus lưu metrics theo thời gian (timestamp + value)
+
+✅ **PromQL:** Query language để truy vấn và aggregate metrics
+
+✅ **Rate Function:** Tính toán rate of change (requests/second, connections/second)
+
+✅ **Pull Model:** Prometheus chủ động pull metrics từ targets (không phải push)
+
+✅ **Service Discovery:** Tự động discover targets trong Docker network
+
+#### 📊 Nginx Metrics Available
+
+| Metric Name                  | Type    | Description                  |
+| ---------------------------- | ------- | ---------------------------- |
+| `nginx_connections_active`   | Gauge   | Active client connections    |
+| `nginx_connections_accepted` | Counter | Total accepted connections   |
+| `nginx_connections_handled`  | Counter | Total handled connections    |
+| `nginx_http_requests_total`  | Counter | Total HTTP requests          |
+| `nginx_connections_reading`  | Gauge   | Connections reading request  |
+| `nginx_connections_writing`  | Gauge   | Connections writing response |
+| `nginx_connections_waiting`  | Gauge   | Idle keepalive connections   |
+
+#### 🔍 Prometheus Architecture
+
+```
+┌──────────────────────────────────────────────────────┐
+│                   Prometheus Server                  │
+│                                                      │
+│  ┌────────────┐    ┌──────────────┐   ┌──────────┐   │
+│  │  Scraper   │───▶│  TSDB        │──▶│  Query   │   │
+│  │  (Pull)    │    │  (Storage)   │   │  Engine  │   │
+│  └────────────┘    └──────────────┘   └──────────┘   │
+│         ▲                                     │      │
+└─────────┼─────────────────────────────────────┼──────┘
+          │                                     │
+          │ scrape /metrics                     ▼
+          │                              ┌─────────────┐
+    ┌─────┴──────┐                       │   Grafana   │
+    │  Targets:  │                       │ Visualization│
+    │            │                       └─────────────┘
+    │ • node:9100│
+    │ • nginx:9113│
+    │ • prom:9090 │
+    └────────────┘
+```
+
+#### 🛠️ Troubleshooting
+
+**1. Target DOWN:**
+
+```bash
+# Check exporter is running
+docker compose ps nginx-exporter
+
+# Check exporter logs
+docker compose logs nginx-exporter
+
+# Test connectivity from Prometheus container
+docker compose exec monitoring-prometheus-server \
+  wget -O- http://nginx-exporter:9113/metrics
+```
+
+**2. No metrics visible:**
+
+```bash
+# Check Prometheus config syntax
+docker compose exec monitoring-prometheus-server \
+  promtool check config /etc/prometheus/prometheus.yml
+
+# Reload Prometheus config
+docker compose restart monitoring-prometheus-server
+```
+
+**3. Stub status 403 Forbidden:**
+
+```bash
+# Check Nginx config
+docker compose exec web-frontend-server cat /etc/nginx/conf.d/default.conf
+
+# Verify allow directive includes exporter IP
+docker inspect nginx-exporter | grep IPAddress
+```
+
+#### 💡 Best Practices
+
+**1. Metrics naming convention:**
+
+```
+<namespace>_<subsystem>_<name>_<unit>
+nginx_http_requests_total
+node_cpu_seconds_total
+```
+
+**2. Use labels for dimensions:**
+
+```promql
+nginx_http_requests_total{job="web", instance="nginx-exporter:9113"}
+```
+
+**3. Counter vs Gauge:**
+
+- **Counter**: Chỉ tăng (requests, connections) - dùng `rate()` để tính tốc độ
+- **Gauge**: Có thể tăng/giảm (active connections, memory usage)
+
+**4. Retention and storage:**
+
+```yaml
+# Trong prometheus config (nếu cần custom)
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+storage:
+  tsdb:
+    retention.time: 15d # Keep data for 15 days
+```
+
+#### ✅ Kết Quả Kiểm Thử Thành Công
+
+**1. Nginx Stub Status:**
+
+```bash
+# Từ internal network
+$ docker run --rm --network cloud-net curlimages/curl:latest \
+  curl -s http://web-frontend-server:80/stub_status
+
+Active connections: 2
+server accepts handled requests
+ 34 34 2307
+Reading: 0 Writing: 1 Waiting: 1
+```
+
+**2. Nginx Exporter Metrics:**
+
+```bash
+$ curl -s http://localhost:9113/metrics | grep "^nginx_"
+
+nginx_connections_accepted 34
+nginx_connections_active 1
+nginx_http_requests_total 2372
+nginx_up 1
+```
+
+**3. Prometheus Targets:**
+
+```bash
+$ curl -s http://localhost:9090/api/v1/targets | grep '"job"'
+
+"job": "node"     → health: "up"
+"job": "prometheus" → health: "up"
+"job": "web"      → health: "up"  ✅ NEW!
+```
+
+**4. Prometheus Query Results:**
+
+```json
+// Query: nginx_http_requests_total
+{
+  "metric": {
+    "instance": "nginx-exporter:9113",
+    "job": "web"
+  },
+  "value": [1762479022, "2372"]
+}
+
+// Query: rate(nginx_http_requests_total[1m])
+{
+  "value": [1762479022, "0.0666681481810707"]
+}
+// ≈ 0.067 requests/second (~4 requests/minute)
+```
+
+---
+
 ### Scripts Hữu Ích
 
 **Script kiểm tra mạng chi tiết:**

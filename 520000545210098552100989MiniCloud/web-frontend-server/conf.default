@@ -11,4 +11,11 @@ server {
     index index.html;
     autoindex off;
   }
+
+  # Stub status endpoint for Prometheus metrics
+  location /stub_status {
+    stub_status;
+    allow 10.10.10.0/24;  # Only internal network
+    deny all;
+  }
 }
