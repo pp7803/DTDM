@@ -2433,6 +2433,552 @@ $ curl -s http://localhost:9090/api/v1/targets | grep '"job"'
 
 ---
 
+### 8️⃣ Grafana Dashboard - System Health Monitoring
+
+**Mục tiêu:** Hiểu trực quan hóa dữ liệu và dashboard trong cloud.
+
+#### 📝 Nội Dung Mở Rộng
+
+Tạo **dashboard cá nhân** tên `System Health of <MSSV>` với 3 biểu đồ giám sát hệ thống.
+
+#### 📊 Dashboard Requirements
+
+**Dashboard Name:** `System Health of 520000545210098552100989`
+
+**Panels (3 biểu đồ):**
+
+1. **CPU Usage (%)** - Gauge/Time Series
+2. **Memory Usage** - Gauge/Time Series
+3. **Network Traffic** - Time Series
+
+**Data Source:** Prometheus (`http://prometheus:9090`)
+
+---
+
+#### 🚀 Bước 1: Truy Cập Grafana
+
+**1. Mở Grafana UI:**
+
+```bash
+# Mở trình duyệt
+open http://localhost:3000
+```
+
+**2. Đăng nhập:**
+
+- **Username:** `admin`
+- **Password:** `admin`
+- Skip change password (hoặc đổi nếu muốn)
+
+#### 🔌 Bước 2: Add Prometheus Data Source
+
+**1. Click vào menu ☰ (hamburger) → Connections → Data Sources**
+
+**2. Click "Add data source"**
+
+**3. Chọn "Prometheus"**
+
+**4. Cấu hình:**
+
+- **Name:** `Prometheus`
+- **URL:** `http://prometheus:9090`
+- **Access:** `Server (default)`
+- Click **"Save & Test"**
+
+**Expected:** ✅ "Data source is working"
+
+![Add Prometheus](image/61.png)
+_Add Prometheus data source_
+
+---
+
+#### 📊 Bước 3: Create New Dashboard
+
+**1. Click menu ☰ → Dashboards → New Dashboard**
+
+**2. Click "Add visualization"**
+
+**3. Chọn data source: "Prometheus"**
+
+---
+
+#### 📈 Panel 1: CPU Usage (%)
+
+**1. Click "Add visualization" → Select "Prometheus"**
+
+**2. Configure Panel:**
+
+**Query (PromQL):**
+
+```promql
+100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+
+**Panel Settings:**
+
+- **Title:** `CPU Usage (%)`
+- **Visualization:** Time series (hoặc Gauge)
+- **Unit:** Percent (0-100)
+- **Min:** 0
+- **Max:** 100
+
+**Giải thích query:**
+
+- `node_cpu_seconds_total{mode="idle"}`: CPU time ở trạng thái idle
+- `irate(...[5m])`: Tính rate trong 5 phút
+- `100 - ... * 100`: Convert sang % CPU đang dùng (100% - idle%)
+
+![CPU Panel](image/62.png)
+_Configure CPU Usage panel_
+
+**3. Click "Apply" để lưu panel**
+
+---
+
+#### 💾 Panel 2: Memory Usage
+
+**1. Click "Add panel" → "Add visualization"**
+
+**2. Configure Panel:**
+
+**Query (PromQL):**
+
+```promql
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+```
+
+**Alternative query (hiển thị GB used):**
+
+```promql
+(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024 / 1024
+```
+
+**Panel Settings:**
+
+- **Title:** `Memory Usage`
+- **Visualization:** Time series (hoặc Gauge)
+- **Unit:** Percent (0-100) hoặc GB
+- **Thresholds:**
+  - Green: 0-70%
+  - Yellow: 70-85%
+  - Red: 85-100%
+
+**Giải thích:**
+
+- `node_memory_MemAvailable_bytes`: RAM còn trống
+- `node_memory_MemTotal_bytes`: Tổng RAM
+- Formula: `(1 - available/total) * 100` = % RAM đang dùng
+
+![Memory Panel](image/63.png)
+_Configure Memory Usage panel_
+
+**3. Click "Apply"**
+
+---
+
+#### 🌐 Panel 3: Network Traffic
+
+**1. Click "Add panel" → "Add visualization"**
+
+**2. Configure Panel:**
+
+**Query A (Receive - Download):**
+
+```promql
+rate(node_network_receive_bytes_total{device!="lo"}[5m]) * 8
+```
+
+**Query B (Transmit - Upload):**
+
+```promql
+rate(node_network_transmit_bytes_total{device!="lo"}[5m]) * 8
+```
+
+**Panel Settings:**
+
+- **Title:** `Network Traffic`
+- **Visualization:** Time series (Graph)
+- **Unit:** bits/sec (bps) hoặc bytes/sec
+- **Legend:**
+  - Query A: `Receive (Download)`
+  - Query B: `Transmit (Upload)`
+- **Y-axis:** Auto
+
+**Giải thích:**
+
+- `node_network_receive_bytes_total`: Bytes received
+- `node_network_transmit_bytes_total`: Bytes transmitted
+- `device!="lo"`: Loại bỏ loopback interface
+- `rate(...[5m])`: Bytes per second
+- `* 8`: Convert bytes → bits
+
+![Network Panel](image/64.png)
+_Configure Network Traffic panel_
+
+**3. Click "Apply"**
+
+---
+
+#### 💾 Bước 4: Save Dashboard
+
+**1. Click icon 💾 "Save dashboard" (góc trên phải)**
+
+**2. Điền thông tin:**
+
+- **Dashboard name:** `System Health of 520000545210098552100989`
+- **Folder:** General (hoặc tạo folder mới)
+- **Description:** `Custom dashboard monitoring CPU, Memory, and Network for MiniCloud project`
+
+**3. Click "Save"**
+
+---
+
+#### 🎨 Bước 5: Customize Dashboard Layout
+
+**1. Click icon ⚙️ "Dashboard settings" (góc trên phải)**
+
+**2. Trong "General":**
+
+- **Tags:** `monitoring`, `system-health`, `minicloud`
+- **Timezone:** Browser Time
+- **Auto refresh:** 5s, 10s, 30s, 1m, 5m (thêm options)
+
+**3. Click "Save dashboard"**
+
+**4. Arrange panels:**
+
+- Drag & drop để sắp xếp layout
+- Resize panels để fit màn hình
+- Layout suggestion:
+  ```
+  ┌─────────────────┬─────────────────┐
+  │   CPU Usage     │  Memory Usage   │
+  ├─────────────────┴─────────────────┤
+  │        Network Traffic            │
+  └───────────────────────────────────┘
+  ```
+
+---
+
+#### 🧪 Bước 6: Test Dashboard với Live Data
+
+**1. Set auto-refresh:**
+
+- Click dropdown ở góc trên phải
+- Chọn "5s" hoặc "10s"
+
+**2. Generate load để test:**
+
+```bash
+# Generate CPU load
+docker run --rm --network cloud-net alpine:latest \
+  sh -c "while true; do echo 'stress test' > /dev/null; done" &
+
+# Generate network traffic
+for i in {1..100}; do
+  curl -s http://localhost:8080/ > /dev/null
+done
+
+# Check memory usage
+docker stats --no-stream
+```
+
+**3. Observe dashboard updates:**
+
+- CPU Usage sẽ tăng lên
+- Network Traffic sẽ spike
+- Memory Usage có thể thay đổi nhẹ
+
+---
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **Grafana Basics:** Tạo dashboard, panels, và organize layout
+
+✅ **PromQL Queries:** Viết queries để lấy metrics từ Prometheus
+
+✅ **Visualization Types:** Time series, Gauge, Graph, và chọn phù hợp với data
+
+✅ **Data Transformations:** Calculate rates, percentages, unit conversions
+
+✅ **Thresholds & Alerts:** Set warning levels cho metrics
+
+✅ **Dashboard Management:** Save, export, share dashboards
+
+✅ **Real-time Monitoring:** Auto-refresh và live data visualization
+
+✅ **Metric Understanding:**
+
+- `node_cpu_seconds_total`: CPU time counters
+- `node_memory_*_bytes`: Memory usage metrics
+- `node_network_*_bytes_total`: Network I/O counters
+
+#### 📊 Useful PromQL Queries
+
+**CPU Usage per core:**
+
+```promql
+100 - (avg by (cpu) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+
+**Memory Used (GB):**
+
+```promql
+(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024^3
+```
+
+**Disk I/O:**
+
+```promql
+rate(node_disk_read_bytes_total[5m])
+rate(node_disk_written_bytes_total[5m])
+```
+
+**Network Bandwidth (Mbps):**
+
+```promql
+rate(node_network_receive_bytes_total[5m]) * 8 / 1000000
+```
+
+---
+
+### 9️⃣ API Gateway Proxy Server - Reverse Proxy & Routing
+
+**Mục tiêu:** Hiểu về Reverse Proxy, Routing, và Load Balancer.
+
+#### 📝 Nội Dung Mở Rộng
+
+Cấu hình thêm **route `/student/`** trỏ tới API `/student` của backend thông qua Nginx reverse proxy.
+
+#### 🔄 Reverse Proxy Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Client (Browser/curl)                  │
+└────────────────────┬────────────────────────────────┘
+                     │ HTTP Request
+                     │ http://localhost/student/
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│         API Gateway (Nginx - Port 80)               │
+│                                                     │
+│  Routes:                                            │
+│  • /              → web-frontend-server:80         │
+│  • /api/          → application-backend-server:8081│
+│  • /student/      → application-backend-server:8081│ ← NEW
+│  • /auth/         → authentication-identity:8080   │
+└────────────────────┬────────────────────────────────┘
+                     │ proxy_pass
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│    Application Backend Server (Port 8081)          │
+│                                                     │
+│    GET /student → Return students.json             │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 🔧 Bước 1: Update Nginx Configuration
+
+**1. Mở file `api-gateway-proxy-server/nginx.conf`:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+nano api-gateway-proxy-server/nginx.conf
+```
+
+**2. Thêm location block mới:**
+
+```nginx
+events {}
+http {
+  server {
+    listen 80;
+
+    location / {
+      proxy_pass http://web-frontend-server:80;
+    }
+
+    location /api/ {
+      proxy_pass http://application-backend-server:8081/;
+    }
+
+    # NEW ROUTE: Direct access to /student endpoint
+    location /student/ {
+      proxy_pass http://application-backend-server:8081/student;
+    }
+
+    location /auth/ {
+      proxy_pass http://authentication-identity-server:8080/;
+    }
+  }
+}
+```
+
+**Giải thích:**
+
+- **`location /student/`**: Match requests tới `http://localhost/student/`
+- **`proxy_pass http://application-backend-server:8081/student`**: Forward request tới backend endpoint
+- **Trailing slash behavior**:
+  - Request: `/student/`
+  - Proxied to: `/student` (trailing slash removed)
+
+![Nginx Config](image/65.png)
+_Thêm route /student/ vào nginx.conf_
+
+---
+
+#### 🔄 Bước 2: Restart API Gateway
+
+**1. Restart container để apply config:**
+
+```bash
+cd 520000545210098552100989MiniCloud
+docker compose restart api-gateway-proxy-server
+```
+
+**2. Verify container restarted:**
+
+```bash
+docker compose ps api-gateway-proxy-server
+```
+
+**Expected output:**
+
+```
+NAME                                    IMAGE          STATUS
+...api-gateway-proxy-server-1          nginx:latest   Up 5 seconds
+```
+
+---
+
+#### 🧪 Bước 3: Test New Route
+
+**1. Test với curl:**
+
+```bash
+# Test route /student/
+curl http://localhost/student/
+
+# Test với pretty JSON
+curl -s http://localhost/student/ | python3 -m json.tool
+
+# Test với headers
+curl -I http://localhost/student/
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "source": "json-file",
+  "count": 5,
+  "data": [
+    {
+      "id": "52000054",
+      "name": "Nguyên Hạnh",
+      "major": "Khoa học Máy tính",
+      "gpa": 3.75,
+      "email": "nguyenhanh@student.tdtu.edu.vn",
+      "year": 3
+    },
+    {
+      "id": "52100985",
+      "name": "Duy Phát",
+      "major": "Mạng Máy tính",
+      "gpa": 3.82,
+      "email": "duyphat@student.tdtu.edu.vn",
+      "year": 3
+    }
+    // ... 3 students more
+  ]
+}
+```
+
+![Test Student Route](image/66.png)
+_Test route /student/ qua API Gateway_
+
+**2. Compare với các routes khác:**
+
+```bash
+# Original API route (still works)
+curl -s http://localhost/api/student | jq '.count'
+
+# New direct route
+curl -s http://localhost/student/ | jq '.count'
+
+# Direct backend (bypass gateway)
+curl -s http://localhost:8085/student | jq '.count'
+```
+
+**All should return:** `5` (same data)
+
+---
+
+#### 🎓 Kiến Thức Đạt Được
+
+✅ **Reverse Proxy Concept:** API Gateway forward requests tới backend services
+
+✅ **URL Routing:** Map external URLs → internal service endpoints
+
+✅ **proxy_pass Directive:** Nginx directive để proxy requests
+
+✅ **Path Transformation:** Understand trailing slash và path rewriting
+
+✅ **Load Balancing Ready:** Architecture sẵn sàng cho load balancing (thêm upstream blocks)
+
+✅ **Single Entry Point:** Client chỉ cần biết `localhost:80`, không cần biết internal ports
+
+✅ **Service Abstraction:** Backend services có thể change ports/IPs mà client không bị ảnh hưởng
+
+✅ **API Gateway Pattern:** Centralized routing, authentication, rate limiting potential
+
+#### 📊 Routing Comparison Table
+
+| Route       | Proxy Target                              | Purpose                   |
+| ----------- | ----------------------------------------- | ------------------------- |
+| `/`         | `web-frontend-server:80`                  | Static website            |
+| `/api/`     | `application-backend-server:8081/`        | General API endpoints     |
+| `/student/` | `application-backend-server:8081/student` | Direct student API ✨ NEW |
+| `/auth/`    | `authentication-identity-server:8080/`    | Keycloak authentication   |
+
+#### 🔍 proxy_pass Behavior Deep Dive
+
+**Case 1: With trailing slash**
+
+```nginx
+location /api/ {
+  proxy_pass http://backend:8081/;
+}
+```
+
+- Request: `http://localhost/api/hello`
+- Proxied: `http://backend:8081/hello` (prefix removed)
+
+**Case 2: Without trailing slash**
+
+```nginx
+location /student/ {
+  proxy_pass http://backend:8081/student;
+}
+```
+
+- Request: `http://localhost/student/`
+- Proxied: `http://backend:8081/student` (exact match)
+
+**Case 3: Path rewrite**
+
+```nginx
+location /old-api/ {
+  proxy_pass http://backend:8081/new-api/;
+}
+```
+
+- Request: `http://localhost/old-api/users`
+- Proxied: `http://backend:8081/new-api/users`
+
 ### Scripts Hữu Ích
 
 **Script kiểm tra mạng chi tiết:**
