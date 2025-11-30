@@ -1,7 +1,7 @@
 # 🚀 MiniCloud - Hệ Thống Cloud Đầy Đủ Tính Năng
 
 > **Dự án**: Thiết kế và triển khai hệ thống cloud hoàn chỉnh với Docker  
-> **Sinh viên**: 52000054 - 52100098 - 52100989  
+> **Sinh viên**:521000985 - 52100989  
 > **Môn học**: Điện toán đám mây
 
 ---
@@ -3036,6 +3036,5 @@ docker compose ps
 
 ## 👥 Nhóm Thực Hiện
 
-- **52000054** - Nguyên Hạnh
 - **52100985** - Duy Phát
 - **52100989** - Văn Phú
