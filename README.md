@@ -1,8 +1,11 @@
 # 🚀 MiniCloud - Hệ Thống Cloud Đầy Đủ Tính Năng
 
 > **Dự án**: Thiết kế và triển khai hệ thống cloud hoàn chỉnh với Docker  
-> **Sinh viên**:521000985 - 52100989  
-> **Môn học**: Điện toán đám mây
+> **Sinh viên**:521000985 - 52100989
+
+- **52100985** - Duy Phát
+- **52100989** - Văn Phú
+  > **Môn học**: Điện toán đám mây
 
 ---
 
